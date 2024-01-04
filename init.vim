@@ -1,13 +1,7 @@
 set nocompatible
 
-" Install vim-plug if not found
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-endif
 
 call plug#begin('~/.vim/plugged')
-    " Note Taking
     Plug 'fmoralesc/vim-pad'
     " NERDTree
     Plug 'scrooloose/nerdtree'
@@ -25,10 +19,6 @@ call plug#begin('~/.vim/plugged')
     Plug 'nanotech/jellybeans.vim'
     " Go programming extension
     Plug 'fatih/vim-go'
-    " Ultimate snippets for vim
-    Plug 'sirver/ultisnips'
-    " Snippest are seperate from engine
-    Plug 'honza/vim-snippets'
     " Taglist
     Plug 'vim-scripts/taglist.vim'
     " Buftabline
@@ -39,8 +29,6 @@ call plug#begin('~/.vim/plugged')
     Plug 'altercation/vim-colors-solarized'
     " Auto comment/decomment
     Plug 'tpope/vim-commentary'
-    " Fugitive Git
-    Plug 'tpope/vim-fugitive'
     " Tabular
     Plug 'godlygeek/tabular'
     " Sneak - Easy movement
@@ -57,24 +45,27 @@ call plug#begin('~/.vim/plugged')
     Plug 'xolox/vim-session'
     " Vim misc
     Plug 'xolox/vim-misc'
-    " Vim arduino support
-    Plug 'stevearc/vim-arduino'
     " Everblush theme
     Plug 'mangeshrex/everblush.vim'
+    " Awesome color theme
+    Plug 'sainnhe/sonokai'
     " Tender colorscheme
     Plug 'jacoborus/tender.vim'
     " Convert number under cursor to hex or back.
     Plug 'rr-/vim-hexdec'
-    " YCM
-    Plug 'valloric/youcompleteme'
+    " LSP
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
+    " New CtrlP
+    Plug 'ctrlpvim/ctrlp.vim'
 call plug#end()
 
-set runtimepath^=~/.vim/bundle/ctrlp.vim
+let g:go_bin_path = $HOME."/go/bin"
+let g:go_doc_popup_window = 1
 
 " Colors
 set termguicolors
-colorscheme tender
-let g:airline_theme = 'tender'
+colorscheme sonokai
+let g:airline_theme = 'sonokai'
 
 if has('gui_macvim')
     " set guifont=Hack:h10
@@ -82,35 +73,22 @@ if has('gui_macvim')
     set linespace=0
 endif
 
-
 " Sneak config options
 let g:sneak#label = 1
-
-" Clang completion engine
-if has('linux')
-    let g:clang_library_path = '/lib/x86_64-linux-gnu/libclang-10.so'
-    let g:clang_c_options = '-std=c11'
-    let g:clang_cpp_options = '-std=c++11 -stdlib=libc++'
-endif
-
-if has('darwin')
-    let g:clang_library_path = '/Library/Developer/CommandLineTools/usr/lib/'
-    let g:clang_c_options = '-std=c11'
-    let g:clang_cpp_options = '-std=c++11 -stdlib=libc++'
-endif
-
-
-let g:UltiSnipsExpandTrigger="<c-space>"
-let g:UltiSnipsListSnippets="<c-l>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
-
-" Ctrl-P
 let g:ctrlp_show_hidden=1
 
-let g:go_doc_popup_window = 1
+" use <tab> to trigger completion and navigate to the next complete item
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+noremap <silent><expr> <c-space> coc#refresh()`
+inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
 
 nnoremap <C-M> :bnext<CR>
 nnoremap <C-N> :bprev<CR>
@@ -136,10 +114,9 @@ set nocursorline
 set ignorecase
 set smartcase
 set incsearch
-set hlsearch
+" set hlsearch
 
 set shell=/bin/zsh
-let g:session_autosave = 'yes'
 
 " Get rid of trailing white space when we save.
 autocmd BufWritePre * %s/\s\+$//e
@@ -163,9 +140,9 @@ filetype on
 let mapleader=","
 
 " Toggle NERDTree
-nnoremap <Leader>f :NERDTreeToggle<Enter>
+nnoremap <F3> :NERDTreeToggle<CR>
 " Toggle TagBar
-nnoremap <Leader>t :TagbarToggle<Enter>
+nnoremap <F2> :TagbarToggle<CR>
 
 "" Bubble single lines
 nmap <C-Up> ddkP
@@ -184,9 +161,12 @@ set listchars=trail:·,tab:▸\ ,eol:¬
 nnoremap <leader>l :set list!<CR> " Toggle tabs and EOL
 nnoremap <leader>ec :e $MYVIMRC<CR>
 
-let g:pad#dir = "~/Dropbox/ObsidianNotes/Pad/"
 set belloff=all
 
+
+" Copilot use CtrlJ to complete
+imap <silent><script><expr> <C-J> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
 
 " An action can be a reference to a function that processes selected lines
 function! s:build_quickfix_list(lines)
@@ -204,3 +184,4 @@ endfunction
 " }}}}
 "
 let g:session_autoload = 'no'
+let g:session_autosave = 'yes'
