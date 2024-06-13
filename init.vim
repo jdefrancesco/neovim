@@ -1,1 +1,0 @@
-/home/jdefr89/dotfiles/nvim/init.vim
