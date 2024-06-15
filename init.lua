@@ -42,7 +42,8 @@ require('packer').startup(function(use)
   use 'altercation/vim-colors-solarized'
   use 'tpope/vim-commentary'
   use 'godlygeek/tabular'
-  use 'justinmk/vim-sneak'
+  -- use 'justinmk/vim-sneak'
+  use 'ggandor/lightspeed.nvim'
   use 'flazz/vim-colorschemes'
   use 'mhinz/vim-startify'
   use 'stevearc/vim-arduino'
@@ -76,8 +77,11 @@ vim.g.go_imports_autosave = 1
 vim.g.python3_host_prog = '/usr/bin/python3'
 
 -- Sneak config options
-vim.g.sneak_label = 1
-vim.g.ctrlp_show_hidden = 1
+vim.g['sneak#label'] = 1
+vim.g['sneak#use_ic_scs'] = 1
+-- Remap Sneak keys for normal mode only
+vim.api.nvim_set_keymap('n', 'z', '<Plug>Sneak_s', {})
+vim.api.nvim_set_keymap('n', 'Z', '<Plug>Sneak_S', {})
 
 -- Switch buffer tabs
 vim.api.nvim_set_keymap('n', '<C-M>', ':bnext<CR>', { noremap = true, silent = true })
