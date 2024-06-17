@@ -159,14 +159,30 @@ vim.g.session_autoload = 'no'
 vim.g.session_autosave = 'yes'
 
 -- Telescope mappings
+-- Load Telescope
+require('telescope').setup {
+  defaults = {
+    mappings = {
+      i = {
+        ["<C-u>"] = function(prompt_bufnr)
+          local action_state = require('telescope.actions.state')
+          local current_picker = action_state.get_current_picker(prompt_bufnr)
+          local current_entry = action_state.get_selected_entry()
+          local current_path = current_entry.path or current_entry.filename
+          local parent_path = vim.fn.fnamemodify(current_path, ":h:h")
+          require('telescope.builtin').find_files({cwd = parent_path})
+        end,
+      },
+    },
+  },
+}
+
+-- Telescope key mappings
 vim.api.nvim_set_keymap('n', '<leader>ff', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fg', '<cmd>Telescope live_grep<cr>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fb', '<cmd>Telescope buffers<cr>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>fh', '<cmd>Telescope help_tags<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>ff', '<cmd>lua require("telescope.builtin").find_files()<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fg', '<cmd>lua require("telescope.builtin").live_grep()<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fb', '<cmd>lua require("telescope.builtin").buffers()<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fh', '<cmd>lua require("telescope.builtin").help_tags()<cr>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<C-p>', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
 
 -- Enable filetype plugins and indent
 vim.cmd('filetype plugin indent on')
