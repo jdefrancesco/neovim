@@ -28,6 +28,7 @@ require('packer').startup(function(use)
 
   -- List of plugins
   use 'fmoralesc/vim-pad'
+  use 'github/copilot.vim'
   use 'scrooloose/nerdtree'
   use 'vim-airline/vim-airline'
   use 'vim-airline/vim-airline-themes'
@@ -42,8 +43,6 @@ require('packer').startup(function(use)
   use 'altercation/vim-colors-solarized'
   use 'tpope/vim-commentary'
   use 'godlygeek/tabular'
-  -- use 'justinmk/vim-sneak'
-  use 'ggandor/lightspeed.nvim'
   use 'flazz/vim-colorschemes'
   use 'mhinz/vim-startify'
   use 'stevearc/vim-arduino'
@@ -65,6 +64,23 @@ require('packer').startup(function(use)
     require('packer').sync()
   end
 end)
+
+-- Copilot settings
+vim.g.copilot_no_tab_map = true
+vim.api.nvim_set_keymap("i", "<C-Space>", 'copilot#Accept("<CR>")', { silent = true, expr = true, script = true })
+--
+-- Define a function to trigger Copilot on comment
+function _G.copilot_comment_trigger()
+  local comment_text = vim.api.nvim_get_current_line()
+  local comment_pattern = "%s*--%s*(.*)" -- Adjust based on your comment style (Lua style shown here)
+  local trigger_text = comment_text:match(comment_pattern)
+  if trigger_text then
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<C-J>', true, true, true), 'n', false)
+  end
+end
+
+-- Map the trigger function to a key combination or event
+vim.api.nvim_set_keymap('i', '<C-/>', 'v:lua.copilot_comment_trigger()', {expr = true, noremap = true})
 
 -- General settings
 vim.o.termguicolors = true
