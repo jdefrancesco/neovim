@@ -44,6 +44,7 @@ require('packer').startup(function(use)
   use 'flazz/vim-colorschemes'
   use 'mhinz/vim-startify'
   use 'stevearc/vim-arduino'
+  use 'ggandor/lightspeed.nvim'
   use 'tpope/vim-surround'
   use 'xolox/vim-session'
   use 'xolox/vim-misc'
@@ -90,24 +91,17 @@ vim.cmd([[
   nmap <silent> gr <Plug>(coc-references)
 
   " Use K to show documentation in preview window
-  nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-  function! s:show_documentation()
-    if (index(['vim', 'help'], &filetype) >= 0)
-      execute 'h '.expand('<cword>')
-    else
-      call CocActionAsync('doHover')
-    endif
-  endfunction
+  nnoremap <silent> K :lua show_documentation()
 ]])
 
 -- Copilot settings
 vim.g.copilot_no_tab_map = true
 vim.api.nvim_set_keymap("i", "<C-Space>", 'copilot#Accept("\\<CR>")', { silent = true, expr = true, script = true })
 
+
 -- General settings
 vim.o.termguicolors = true
-vim.cmd('colorscheme github_dark_dimmed')
+vim.cmd('colorscheme gruvbox')
 vim.g.airline_theme = 'minimalist'
 vim.g.go_bin_path = vim.env.HOME .. "/.local/bin"
 vim.g.go_doc_popup_window = 1
@@ -115,11 +109,6 @@ vim.g.go_auto_import = 1
 vim.g.go_imports_autosave = 1
 vim.g.python3_host_prog = '/usr/bin/python3'
 
--- Sneak config options
-vim.g['sneak#label'] = 1
-vim.g['sneak#use_ic_scs'] = 1
-vim.api.nvim_set_keymap('n', 'z', '<Plug>Sneak_s', {})
-vim.api.nvim_set_keymap('n', 'Z', '<Plug>Sneak_S', {})
 
 -- Switch buffer tabs
 vim.api.nvim_set_keymap('n', '<C-M>', ':bnext<CR>', { noremap = true, silent = true })
@@ -185,7 +174,7 @@ vim.o.belloff = 'all'
 
 -- Build quickfix list
 vim.cmd([[
-  function! s:build_quickfix_list(lines)
+  function! BuildQuickfixList(lines)
     call setqflist(map(copy(a:lines), '{ "filename": v:val }'))
     copen
     cc
@@ -224,4 +213,16 @@ vim.api.nvim_set_keymap('n', '<C-p>', '<cmd>Telescope find_files<cr>', { noremap
 -- Enable filetype plugins and indent
 vim.cmd('filetype plugin indent on')
 vim.cmd('filetype on')
+
+-- Initialize Lightspeed
+require'lightspeed'.setup {}
+
+-- Remap 's' key to Lightspeed functionality
+vim.api.nvim_set_keymap('n', 's', '<Plug>Lightspeed_s', {})
+vim.api.nvim_set_keymap('n', 'S', '<Plug>Lightspeed_S', {})
+vim.api.nvim_set_keymap('x', 's', '<Plug>Lightspeed_s', {})
+vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
+vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
+vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
+
 
