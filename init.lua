@@ -26,7 +26,7 @@ require('packer').startup(function(use)
 
   -- List of plugins
   use 'fmoralesc/vim-pad'
-  use 'github/copilot.vim'
+  -- use 'github/copilot.vim'
   use 'scrooloose/nerdtree'
   use 'vim-airline/vim-airline'
   use 'vim-airline/vim-airline-themes'
@@ -57,7 +57,31 @@ require('packer').startup(function(use)
   use 'nvim-telescope/telescope.nvim'
   use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
+  use {
+    "zbirenbaum/copilot.lua",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({
+        suggestion = { enabled = false },
+        panel = { enabled = false },
+      })
+    end,
+  }
+  use {
+    "zbirenbaum/copilot-cmp",
+    after = { "copilot.lua" },
+    config = function()
+      require("copilot_cmp").setup()
+    end,
+  }
 
+  -- nvim-cmp and dependencies
+  use 'hrsh7th/nvim-cmp' -- Completion plugin
+  use 'hrsh7th/cmp-buffer' -- Buffer completions
+  use 'hrsh7th/cmp-path' -- Path completions
+  use 'hrsh7th/cmp-cmdline' -- Cmdline completions
+  use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
+  use 'L3MON4D3/LuaSnip' -- Snippet engine
   -- Automatically set up your configuration after cloning packer.nvim
   if packer_bootstrap then
     require('packer').sync()
@@ -94,10 +118,34 @@ vim.cmd([[
   nnoremap <silent> K :lua show_documentation()
 ]])
 
+-- nvim-cmp setup
+local cmp = require'cmp'
+
+cmp.setup({
+  snippet = {
+    expand = function(args)
+      require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
+    end,
+  },
+  mapping = {
+    ['<C-b>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.close(),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+  },
+  sources = cmp.config.sources({
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+    { name = 'copilot' }, -- Add Copilot as a source
+  }, {
+    { name = 'buffer' },
+  })
+})
+
 -- Copilot settings
 vim.g.copilot_no_tab_map = false
--- vim.api.nvim_set_keymap("i", "<C-Space>", 'copilot#Accept("\\<CR>")', { silent = true, expr = true, script = true })
-
+-- vim.api.nvim_set_keymap("i", "<C-Space>", 'copilot#Accept("<CR>")', { silent = true, expr = true, script = true })
 
 -- General settings
 vim.o.termguicolors = true
@@ -108,7 +156,6 @@ vim.g.go_doc_popup_window = 1
 vim.g.go_auto_import = 1
 vim.g.go_imports_autosave = 1
 vim.g.python3_host_prog = '/usr/bin/python3'
-
 
 -- Switch buffer tabs
 vim.api.nvim_set_keymap('n', '<C-M>', ':bnext<CR>', { noremap = true, silent = true })
@@ -224,5 +271,4 @@ vim.api.nvim_set_keymap('x', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
 vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
-
 
