@@ -118,7 +118,7 @@ vim.cmd([[
   nnoremap <silent> K :lua show_documentation()
 ]])
 
--- nvim-cmp setup
+
 local cmp = require'cmp'
 
 cmp.setup({
@@ -132,7 +132,31 @@ cmp.setup({
     ['<C-f>'] = cmp.mapping.scroll_docs(4),
     ['<C-Space>'] = cmp.mapping.complete(),
     ['<C-e>'] = cmp.mapping.close(),
-    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+    ['<CR>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.confirm({ select = true })
+      elseif require("copilot.suggestion").is_visible() then
+        require("copilot.suggestion").accept()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ['<Tab>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      elseif require("copilot.suggestion").is_visible() then
+        require("copilot.suggestion").accept()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ['<S-Tab>'] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.select_prev_item()
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
   },
   sources = cmp.config.sources({
     { name = 'nvim_lsp' },
@@ -144,8 +168,11 @@ cmp.setup({
 })
 
 -- Copilot settings
-vim.g.copilot_no_tab_map = false
--- vim.api.nvim_set_keymap("i", "<C-Space>", 'copilot#Accept("<CR>")', { silent = true, expr = true, script = true })
+vim.g.copilot_no_tab_map = true
+-- Copilot suggestion accept mapping
+vim.api.nvim_set_keymap("i", "<Tab>", 'copilot#Accept("<CR>")', { silent = true, expr = true, script = true })
+vim.api.nvim_set_keymap("i", "<CR>", 'copilot#Accept("<CR>")', { silent = true, expr = true, script = true })
+
 
 -- General settings
 vim.o.termguicolors = true
