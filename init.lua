@@ -28,6 +28,7 @@ require('packer').startup(function(use)
 
   -- List of plugins
   use 'fmoralesc/vim-pad'
+  use {'kevinhwang91/nvim-ufo', requires = 'kevinhwang91/promise-async'}
   use 'scrooloose/nerdtree'
   use 'vim-airline/vim-airline'
   use 'vim-airline/vim-airline-themes'
@@ -59,12 +60,29 @@ require('packer').startup(function(use)
   use 'nvim-telescope/telescope.nvim'
   use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
+  use({ "robitx/gp.nvim",
+    config = function()
+        local conf = {
+            -- For customization, refer to Install > Configuration in the Documentation/Readme
+            open_api_key = os.getenv("OPENAI_TOKEN")
+        }
+        require("gp").setup(conf)
 
+        -- Setup shortcuts here (see Usage > Shortcuts in the Documentation/Readme)
+    end,
+  })
   -- Automatically set up your configuration after cloning packer.nvim
   if packer_bootstrap then
     require('packer').sync()
   end
 end)
+
+-- Enable autocomplete
+vim.o.completeopt = 'menuone,noselect'
+
+-- Use <Tab> for completion
+vim.api.nvim_set_keymap('i', '<Tab>', 'pumvisible() ? "\\<C-n>" : "\\<Tab>"', { expr = true })
+vim.api.nvim_set_keymap('i', '<S-Tab>', 'pumvisible() ? "\\<C-p>" : "\\<S-Tab>"', { expr = true })
 
 -- General settings
 vim.o.termguicolors = true
