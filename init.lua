@@ -64,7 +64,14 @@ require('packer').startup(function(use)
     config = function()
         local conf = {
             -- For customization, refer to Install > Configuration in the Documentation/Readme
-            open_api_key = os.getenv("OPENAI_TOKEN")
+            openai_api_key = os.getenv("OPENAI_API_TOKEN"),
+            providers = {
+                openai = {
+                    disable = false,
+                    endpoint = "https://api.openai.com/v1/chat/completions",
+                    secret = os.getenv("OPENAI_API_KEY"),
+                },
+            }
         }
         require("gp").setup(conf)
 
