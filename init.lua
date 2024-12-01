@@ -56,6 +56,7 @@ require('packer').startup(function(use)
   use 'nvim-telescope/telescope.nvim'
   use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
+  -- ChatGPT Gp.nvim Plugin
   use({ "robitx/gp.nvim",
     config = function()
         local conf = {
@@ -76,11 +77,11 @@ require('packer').startup(function(use)
   })
 
   -- nvim-cmp and dependencies
-  -- use 'hrsh7th/nvim-cmp' -- Completion plugin
-  -- use 'hrsh7th/cmp-buffer' -- Buffer completions
-  -- use 'hrsh7th/cmp-path' -- Path completions
-  -- use 'hrsh7th/cmp-cmdline' -- Cmdline completions
-  -- use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
+  use 'hrsh7th/nvim-cmp' -- Completion plugin
+  use 'hrsh7th/cmp-buffer' -- Buffer completions
+  use 'hrsh7th/cmp-path' -- Path completions
+  use 'hrsh7th/cmp-cmdline' -- Cmdline completions
+  use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
   -- use 'L3MON4D3/LuaSnip' -- Snippet engine
   -- Automatically set up your configuration after cloning packer.nvim
   if packer_bootstrap then
