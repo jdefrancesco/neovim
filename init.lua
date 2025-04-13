@@ -45,7 +45,6 @@ require('packer').startup(function(use)
   use 'stevearc/vim-arduino'
   use 'ggandor/lightspeed.nvim'
   use 'tpope/vim-surround'
-  use 'xolox/vim-session'
   use 'xolox/vim-misc'
   use 'mangeshrex/everblush.vim'
   use 'sainnhe/sonokai'
@@ -89,14 +88,44 @@ require('packer').startup(function(use)
   end
 end)
 
+if os.getenv("TMUX") then
+  vim.cmd([[ let g:C_NoCComments = 1 ]])
+end
 
 -- Enable autocomplete
 vim.o.completeopt = 'menuone,noselect'
 
--- Use <Tab> for completion
-vim.api.nvim_set_keymap('i', '<Tab>', 'pumvisible() ? "\\<C-n>" : "\\<Tab>"', { expr = true })
-vim.api.nvim_set_keymap('i', '<S-Tab>', 'pumvisible() ? "\\<C-p>" : "\\<S-Tab>"', { expr = true })
+-- Function to check if previous character is whitespace
+local function check_backspace()
+  local col = vim.fn.col('.') - 1
+  return col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') ~= nil
+end
 
+-- Tab for completion
+vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = true})
+vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
+
+-- Enter to confirm completion
+vim.api.nvim_set_keymap("i", "<CR>", [[pumvisible() ? "\<C-y>" : "\<CR>"]], {expr = true, noremap = true})
+
+-- Define the Lua functions used above
+_G.tab_complete = function()
+  if vim.fn.pumvisible() == 1 then
+    return vim.api.nvim_replace_termcodes("<C-n>", true, true, true)
+  elseif check_backspace() then
+    return vim.api.nvim_replace_termcodes("<Tab>", true, true, true)
+  else
+    return vim.fn["coc#refresh"]()
+  end
+end
+
+_G.s_tab_complete = function()
+  if vim.fn.pumvisible() == 1 then
+    return vim.api.nvim_replace_termcodes("<C-p>", true, true, true)
+  else
+    return vim.api.nvim_replace_termcodes("<S-Tab>", true, true, true)
+  end
+end
 -- General settings
 vim.o.termguicolors = true
 vim.cmd('colorscheme gruvbox')
@@ -222,3 +251,6 @@ vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
 vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
 
+vim.cmd([[
+command! -nargs=0 CocFix call CocAction('doQuickfix')
+]])
