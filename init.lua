@@ -105,8 +105,10 @@ end
 vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = true})
 vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
 
--- Enter to confirm completion
-vim.api.nvim_set_keymap("i", "<CR>", [[pumvisible() ? "\<C-y>" : "\<CR>"]], {expr = true, noremap = true})
+vim.cmd([[
+  " Use <CR> to confirm completion, fallback to newline
+  inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
+]])
 
 -- Define the Lua functions used above
 _G.tab_complete = function()
