@@ -69,8 +69,11 @@ require('packer').startup(function(use)
   end
 end)
 
--- LSP setup (example with pyright)
-require('lspconfig').pyright.setup{}
+local lspconfig = require('lspconfig')
+lspconfig.clangd.setup({})
+lspconfig.gopls.setup({})
+lspconfig.pyright.setup({})
+
 local cmp = require'cmp'
 cmp.setup({
     kmapping = {
@@ -97,6 +100,9 @@ cmp.setup({
     { name = 'luasnip' },
   }
 })
+
+-- Key mappings for autoformatting
+vim.keymap.set("n", "<leader>r", function()  vim.lsp.buf.format() end, { noremap = true, silent = true })
 
 -- Enable autocomplete
 vim.o.completeopt = 'menuone,noselect'
@@ -232,6 +238,3 @@ vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
 vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
 
-vim.cmd([[
-command! -nargs=0 CocFix call CocAction('doQuickfix')
-]])
