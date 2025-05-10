@@ -23,8 +23,6 @@ vim.cmd([[
 -- Packer plugins
 require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
-
-  -- List of plugins
   use 'fmoralesc/vim-pad'
   use 'scrooloose/nerdtree'
   use 'vim-airline/vim-airline'
@@ -50,47 +48,55 @@ require('packer').startup(function(use)
   use 'sainnhe/sonokai'
   use 'jacoborus/tender.vim'
   use 'rr-/vim-hexdec'
-  use {'neoclide/coc.nvim', branch = 'release'}
   use 'nvim-lua/plenary.nvim'
   use 'nvim-telescope/telescope.nvim'
   use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
-  -- ChatGPT Gp.nvim Plugin
-  use({ "robitx/gp.nvim",
-    config = function()
-        local conf = {
-            -- For customization, refer to Install > Configuration in the Documentation/Readme
-            openai_api_key = os.getenv("OPENAI_API_TOKEN"),
-            providers = {
-                openai = {
-                    disable = false,
-                    endpoint = "https://api.openai.com/v1/chat/completions",
-                    secret = os.getenv("OPENAI_API_KEY"),
-                },
-            }
-        }
-        require("gp").setup(conf)
-
-        -- Setup shortcuts here (see Usage > Shortcuts in the Documentation/Readme)
-    end,
-  })
 
   -- nvim-cmp and dependencies
   use 'hrsh7th/nvim-cmp' -- Completion plugin
+  use 'hrsh7th/cmp-nvim-lsp'
+  use 'neovim/nvim-lspconfig'
+  use 'github/copilot.vim'
   use 'hrsh7th/cmp-buffer' -- Buffer completions
   use 'hrsh7th/cmp-path' -- Path completions
   use 'hrsh7th/cmp-cmdline' -- Cmdline completions
   use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
-  -- use 'L3MON4D3/LuaSnip' -- Snippet engine
-  -- Automatically set up your configuration after cloning packer.nvim
+  use 'L3MON4D3/LuaSnip' -- Snippet engine
+
   if packer_bootstrap then
     require('packer').sync()
   end
 end)
 
-if os.getenv("TMUX") then
-  vim.cmd([[ let g:C_NoCComments = 1 ]])
-end
+-- LSP setup (example with pyright)
+require('lspconfig').pyright.setup{}
+local cmp = require'cmp'
+cmp.setup({
+    kmapping = {
+      ['<Tab>'] = function(fallback)
+      local copilot_keys = vim.fn['copilot#Accept']()
+      if copilot_keys ~= '' then
+        vim.api.nvim_feedkeys(copilot_keys, 'i', true)
+      elseif cmp.visible() then
+        cmp.select_next_item()
+      else
+        fallback()
+      end
+    end,
+    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
+    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+  },
+  snippet = {
+    expand = function(args)
+      require('luasnip').lsp_expand(args.body)
+    end,
+  },
+  sources = {
+    { name = 'nvim_lsp' },
+    { name = 'luasnip' },
+  }
+})
 
 -- Enable autocomplete
 vim.o.completeopt = 'menuone,noselect'
@@ -101,33 +107,6 @@ local function check_backspace()
   return col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') ~= nil
 end
 
--- Tab for completion
-vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true, noremap = true})
-vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true, noremap = true})
-
-vim.cmd([[
-  " Use <CR> to confirm completion, fallback to newline
-  inoremap <silent><expr> <CR> pumvisible() ? coc#_select_confirm() : "\<CR>"
-]])
-
--- Define the Lua functions used above
-_G.tab_complete = function()
-  if vim.fn.pumvisible() == 1 then
-    return vim.api.nvim_replace_termcodes("<C-n>", true, true, true)
-  elseif check_backspace() then
-    return vim.api.nvim_replace_termcodes("<Tab>", true, true, true)
-  else
-    return vim.fn["coc#refresh"]()
-  end
-end
-
-_G.s_tab_complete = function()
-  if vim.fn.pumvisible() == 1 then
-    return vim.api.nvim_replace_termcodes("<C-p>", true, true, true)
-  else
-    return vim.api.nvim_replace_termcodes("<S-Tab>", true, true, true)
-  end
-end
 -- General settings
 vim.o.termguicolors = true
 vim.cmd('colorscheme gruvbox')
