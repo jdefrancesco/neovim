@@ -50,6 +50,7 @@ require('packer').startup(function(use)
   use 'rr-/vim-hexdec'
   use 'nvim-lua/plenary.nvim'
   use 'nvim-telescope/telescope.nvim'
+  use { 'nvim-telescope/telescope-file-browser.nvim' }
   use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
 
@@ -63,11 +64,54 @@ require('packer').startup(function(use)
   use 'hrsh7th/cmp-cmdline' -- Cmdline completions
   use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
   use 'L3MON4D3/LuaSnip' -- Snippet engine
+  --
+  -- ChatGPT Gp.nvim Plugin
+  use({ "robitx/gp.nvim",
+    config = function()
+        local conf = {
+            -- For customization, refer to Install > Configuration in the Documentation/Readme
+            openai_api_key = os.getenv("OPENAI_API_TOKEN"),
+            providers = {
+                openai = {
+                    disable = false,
+                    endpoint = "https://api.openai.com/v1/chat/completions",
+                    secret = os.getenv("OPENAI_API_KEY"),
+                },
+            }
+        }
+        require("gp").setup(conf)
+    end,
+  })
 
   if packer_bootstrap then
     require('packer').sync()
   end
 end)
+
+--
+-- Telescope Setup
+local telescope = require("telescope")
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+local builtin = require("telescope.builtin")
+
+
+telescope.setup({ defaults = {} })
+telescope.load_extension("file_browser")
+
+-- Key mappings for breadcrumb-based navigation
+vim.keymap.set("n", "<C-p>", function()
+  push_dir(current_dir)
+  require("telescope").extensions.file_browser.file_browser({
+    path = current_dir,
+    cwd = current_dir,
+    prompt_title = "" .. vim.fn.fnamemodify(current_dir, ":~"),
+    grouped = true,
+    -- hidden = true,
+    respect_gitignore = false
+  })
+end, { noremap = true, silent = true })
+
 
 local lspconfig = require('lspconfig')
 lspconfig.clangd.setup({})
@@ -115,7 +159,7 @@ end
 
 -- General settings
 vim.o.termguicolors = true
-vim.cmd('colorscheme gruvbox')
+vim.cmd('colorscheme jellybeans')
 vim.g.airline_theme = 'minimalist'
 vim.g.go_bin_path = vim.env.HOME .. "/.local/bin"
 vim.g.go_doc_popup_window = 1
@@ -198,31 +242,43 @@ vim.cmd([[
 vim.g.session_autoload = 'no'
 vim.g.session_autosave = 'yes'
 
--- Telescope mappings
-require('telescope').setup {
-  defaults = {
-    mappings = {
-      i = {
-        ["<C-u>"] = function(prompt_bufnr)
-          local action_state = require('telescope.actions.state')
-          local current_picker = action_state.get_current_picker(prompt_bufnr)
-          local current_entry = action_state.get_selected_entry()
-          local current_path = current_entry.path or current_entry.filename
-          local parent_path = vim.fn.fnamemodify(current_path, ":h:h")
-          require('telescope.builtin').find_files({cwd = parent_path})
-        end,
-      },
+-- Telescope Setup with Breadcrumb UI
+local actions = require("telescope.actions")
+local action_state = require("telescope.actions.state")
+local builtin = require("telescope.builtin")
+local telescope = require("telescope")
+
+require("telescope").setup({
+  extensions = {
+    file_browser = {
+      -- 1. turn off nvim-web-devicons entirely
+      use_git_status = false,   -- don’t show git symbols
+      hijack_netrw   = true,
+
+      -- 2. replace the devicon column with ONE plain glyph
+      dir_icon   = ">",         -- this is for folders
+      file_icon  = "●",         -- this is for files
+      dir_icon_hl  = "Directory",      -- blue by default
+      file_icon_hl = "TelescopeBorder",-- any highlight you like
+
+      -- (everything else is optional)
+      grouped = true,
+      hidden  = true,
     },
   },
-}
+})
+require("telescope").load_extension("file_browser")
 
--- Telescope key mappings
-vim.api.nvim_set_keymap('n', '<leader>ff', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fg', '<cmd>Telescope live_grep<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fb', '<cmd>Telescope buffers<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>fh', '<cmd>Telescope help_tags<cr>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<C-p>', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
-
+vim.keymap.set("n", "<C-p>", function()
+  require("telescope").extensions.file_browser.file_browser({
+    path = vim.fn.expand("%:p:h"),      -- current file’s dir
+    cwd  = vim.fn.expand("%:p:h"),
+    prompt_title = "File Browser",
+    grouped = true,
+    hidden = true,
+    respect_gitignore = false,
+  })
+end, { noremap=true, silent=true })
 -- Enable filetype plugins and indent
 vim.cmd('filetype plugin indent on')
 vim.cmd('filetype on')
@@ -238,3 +294,4 @@ vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
 vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
 
+vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
