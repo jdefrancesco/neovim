@@ -1,24 +1,4 @@
--- Packer Bootstrap
-local ensure_packer = function()
-  local fn = vim.fn
-  local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
-  if fn.empty(fn.glob(install_path)) > 0 then
-    fn.system({'git', 'clone', '--depth', '1', 'https://github.com/wbthomason/packer.nvim', install_path})
-    vim.cmd [[packadd packer.nvim]]
-    return true
-  end
-  return false
-end
 
-local packer_bootstrap = ensure_packer()
-
--- Autocommand to reload Neovim when saving this init.lua file
-vim.cmd([[
-  augroup packer_user_config
-    autocmd!
-    autocmd BufWritePost init.lua source <afile> | PackerSync
-  augroup end
-]])
 
 -- Packer plugins
 require('packer').startup(function(use)
@@ -87,30 +67,6 @@ require('packer').startup(function(use)
     require('packer').sync()
   end
 end)
-
---
--- Telescope Setup
-local telescope = require("telescope")
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-local builtin = require("telescope.builtin")
-
-
-telescope.setup({ defaults = {} })
-telescope.load_extension("file_browser")
-
--- Key mappings for breadcrumb-based navigation
-vim.keymap.set("n", "<C-p>", function()
-  push_dir(current_dir)
-  require("telescope").extensions.file_browser.file_browser({
-    path = current_dir,
-    cwd = current_dir,
-    prompt_title = "" .. vim.fn.fnamemodify(current_dir, ":~"),
-    grouped = true,
-    -- hidden = true,
-    respect_gitignore = false
-  })
-end, { noremap = true, silent = true })
 
 
 local lspconfig = require('lspconfig')
@@ -251,17 +207,11 @@ local telescope = require("telescope")
 require("telescope").setup({
   extensions = {
     file_browser = {
-      -- 1. turn off nvim-web-devicons entirely
       use_git_status = false,   -- don’t show git symbols
-      hijack_netrw   = true,
-
-      -- 2. replace the devicon column with ONE plain glyph
-      dir_icon   = ">",         -- this is for folders
+      dir_icon   = "[DIR]",         -- this is for folders
       file_icon  = "●",         -- this is for files
       dir_icon_hl  = "Directory",      -- blue by default
       file_icon_hl = "TelescopeBorder",-- any highlight you like
-
-      -- (everything else is optional)
       grouped = true,
       hidden  = true,
     },
