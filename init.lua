@@ -67,7 +67,8 @@ require('packer').startup(function(use)
     require('packer').sync()
   end
 end)
-
+-- Lua way
+vim.g.NERDTreeChDirMode = 2
 
 local lspconfig = require('lspconfig')
 lspconfig.clangd.setup({})
