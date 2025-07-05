@@ -9,29 +9,33 @@ require('packer').startup(function(use)
   use 'vim-airline/vim-airline-themes'
   use 'vim-scripts/c.vim'
   use 'tpope/vim-fugitive'
+
+  -- Colorschemes
   use 'morhetz/gruvbox'
-  use 'dhananjaylatkar/cscope_maps.nvim'
   use 'nanotech/jellybeans.vim'
+  use 'altercation/vim-colors-solarized'
+  use 'flazz/vim-colorschemes'
+  use 'mangeshrex/everblush.vim'
+  use 'projekt0n/github-nvim-theme'
+  use 'sainnhe/sonokai'
+  use 'jacoborus/tender.vim'
+  use 'nvim-lua/plenary.nvim'
+  use "rebelot/kanagawa.nvim"
+
+  use 'dhananjaylatkar/cscope_maps.nvim'
   use 'vim-scripts/taglist.vim'
   use 'ap/vim-buftabline'
   use 'majutsushi/tagbar'
-  use 'altercation/vim-colors-solarized'
   use 'tpope/vim-commentary'
   use 'godlygeek/tabular'
-  use 'flazz/vim-colorschemes'
   use 'mhinz/vim-startify'
   use 'stevearc/vim-arduino'
   use 'ggandor/lightspeed.nvim'
   use 'tpope/vim-surround'
   use 'xolox/vim-misc'
-  use 'mangeshrex/everblush.vim'
-  use 'sainnhe/sonokai'
-  use 'jacoborus/tender.vim'
   use 'rr-/vim-hexdec'
-  use 'nvim-lua/plenary.nvim'
   use 'nvim-telescope/telescope.nvim'
   use { 'nvim-telescope/telescope-file-browser.nvim' }
-  use 'projekt0n/github-nvim-theme'
   use {'fatih/vim-go', run = ':GoUpdateBinaries'}
 
   -- nvim-cmp and dependencies
@@ -39,6 +43,7 @@ require('packer').startup(function(use)
   use 'hrsh7th/cmp-nvim-lsp'
   use 'neovim/nvim-lspconfig'
   use 'github/copilot.vim'
+
   use 'hrsh7th/cmp-buffer' -- Buffer completions
   use 'hrsh7th/cmp-path' -- Path completions
   use 'hrsh7th/cmp-cmdline' -- Cmdline completions
@@ -67,7 +72,8 @@ require('packer').startup(function(use)
     require('packer').sync()
   end
 end)
--- Lua way
+
+-- Set NERDTree settings
 vim.g.NERDTreeChDirMode = 2
 
 local lspconfig = require('lspconfig')
@@ -116,7 +122,7 @@ end
 
 -- General settings
 vim.o.termguicolors = true
-vim.cmd('colorscheme jellybeans')
+vim.cmd('colorscheme sonokai') -- Set colorscheme to Sonokai
 vim.g.airline_theme = 'minimalist'
 vim.g.go_bin_path = vim.env.HOME .. "/.local/bin"
 vim.g.go_doc_popup_window = 1
@@ -180,7 +186,7 @@ vim.api.nvim_set_keymap('v', '<C-Down>', 'xp`[V`]', { noremap = true, silent = t
 vim.api.nvim_set_keymap('n', '<leader>q', 'gqip', { noremap = true, silent = true })
 
 -- Visualize tabs and newlines
-vim.o.listchars = 'trail:·,tab:▸\\ ,eol:¬'
+vim.o.listchars = 'trail:·,tab:▸\\,eol:¬'
 vim.api.nvim_set_keymap('n', '<leader>l', ':set list!<CR>', { noremap = true, silent = true }) -- Toggle tabs and EOL
 vim.api.nvim_set_keymap('n', '<leader>ec', ':e $MYVIMRC<CR>', { noremap = true, silent = true })
 
@@ -199,7 +205,7 @@ vim.cmd([[
 vim.g.session_autoload = 'no'
 vim.g.session_autosave = 'yes'
 
--- Telescope Setup with Breadcrumb UI
+-- Telescope Setup
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 local builtin = require("telescope.builtin")
@@ -230,6 +236,7 @@ vim.keymap.set("n", "<C-p>", function()
     respect_gitignore = false,
   })
 end, { noremap=true, silent=true })
+
 -- Enable filetype plugins and indent
 vim.cmd('filetype plugin indent on')
 vim.cmd('filetype on')
