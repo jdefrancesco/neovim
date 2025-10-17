@@ -177,12 +177,3 @@ vim.cmd([[
   autocmd BufWritePre *.html :normal gg=G
 ]])
 
--- Silence deprecated lspconfig messages
-vim.defer_fn(function()
-  local orig = vim.notify
-  vim.notify = function(msg, level, opts)
-    if msg:match("require%(\'lspconfig\'%)") then return end
-    orig(msg, level, opts)
-  end
-end, 200)
-
