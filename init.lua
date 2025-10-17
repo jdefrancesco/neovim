@@ -1,152 +1,76 @@
+-- Updated: 2025-10
 
-
--- Packer plugins
-require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim'
-  use 'fmoralesc/vim-pad'
-  use 'scrooloose/nerdtree'
-  use 'vim-airline/vim-airline'
-  use 'vim-airline/vim-airline-themes'
-  use 'vim-scripts/c.vim'
-  use 'tpope/vim-fugitive'
-
-  -- Colorschemes
-  use 'morhetz/gruvbox'
-  use 'nanotech/jellybeans.vim'
-  use 'altercation/vim-colors-solarized'
-  use 'flazz/vim-colorschemes'
-  use 'mangeshrex/everblush.vim'
-  use 'projekt0n/github-nvim-theme'
-  use 'sainnhe/sonokai'
-  use 'jacoborus/tender.vim'
-  use 'nvim-lua/plenary.nvim'
-  use "rebelot/kanagawa.nvim"
-
-  use 'dhananjaylatkar/cscope_maps.nvim'
-  use 'vim-scripts/taglist.vim'
-  use 'ap/vim-buftabline'
-  use 'majutsushi/tagbar'
-  use 'tpope/vim-commentary'
-  use 'godlygeek/tabular'
-  use 'mhinz/vim-startify'
-  use 'stevearc/vim-arduino'
-  use 'ggandor/lightspeed.nvim'
-  use 'tpope/vim-surround'
-  use 'xolox/vim-misc'
-  use 'rr-/vim-hexdec'
-  use 'nvim-telescope/telescope.nvim'
-  use { 'nvim-telescope/telescope-file-browser.nvim' }
-  use {'fatih/vim-go', run = ':GoUpdateBinaries'}
-
-  -- nvim-cmp and dependencies
-  use 'hrsh7th/nvim-cmp' -- Completion plugin
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'neovim/nvim-lspconfig'
-  use 'github/copilot.vim'
-
-  use 'hrsh7th/cmp-buffer' -- Buffer completions
-  use 'hrsh7th/cmp-path' -- Path completions
-  use 'hrsh7th/cmp-cmdline' -- Cmdline completions
-  use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
-  use 'L3MON4D3/LuaSnip' -- Snippet engine
-  use { 'nvim-treesitter/nvim-treesitter' , run=':TSUpdate' }
-  -- ChatGPT Gp.nvim Plugin
-  use({ "robitx/gp.nvim",
-    config = function()
-        local conf = {
-            -- For customization, refer to Install > Configuration in the Documentation/Readme
-            openai_api_key = os.getenv("OPENAI_API_TOKEN"),
-            providers = {
-                openai = {
-                    disable = false,
-                    endpoint = "https://api.openai.com/v1/chat/completions",
-                    secret = os.getenv("OPENAI_API_KEY"),
-                },
-            }
-        }
-        require("gp").setup(conf)
-    end,
+-- Lazy.nvim Bootstrap
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", lazypath,
   })
-
-  if packer_bootstrap then
-    require('packer').sync()
-  end
-end)
-
--- Set NERDTree settings
-vim.g.NERDTreeChDirMode = 2
-
-require("nvim-treesitter.configs").setup({
-  ensure_installed = { "c", "cpp", "lua", "bash", "python" },
-  highlight = { enable = true },
-  indent = { enable = true },
-})
-
-
-vim.lsp.enable('clangd')
-vim.lsp.enable('gopls')
-vim.lsp.enable('pyright')
-
-
-local cmp = require ("cmp")
-cmp.setup({
-    kmapping = {
-      ['<Tab>'] = function(fallback)
-      local copilot_keys = vim.fn['copilot#Accept']()
-      if copilot_keys ~= '' then
-        vim.api.nvim_feedkeys(copilot_keys, 'i', true)
-      elseif cmp.visible() then
-        cmp.select_next_item()
-      else
-        fallback()
-      end
-    end,
-    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
-    ['<CR>'] = cmp.mapping.confirm({ select = true }),
-  },
-  snippet = {
-    expand = function(args)
-      require('luasnip').lsp_expand(args.body)
-    end,
-  },
-  sources = {
-    { name = 'nvim_lsp' },
-    { name = 'luasnip' },
-  }
-})
-
--- Key mappings for autoformatting
-vim.keymap.set("n", "<leader>r", function()  vim.lsp.buf.format() end, { noremap = true, silent = true })
-
--- Enable autocomplete
-vim.o.completeopt = 'menuone,noselect'
-
--- Function to check if previous character is whitespace
-local function check_backspace()
-  local col = vim.fn.col('.') - 1
-  return col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') ~= nil
 end
+vim.opt.rtp:prepend(lazypath)
 
--- General settings
+-- Plugin Specification
+require("lazy").setup({
+  -- Core Dependencies
+  { "nvim-lua/plenary.nvim" },
+  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdateSync" },
+  { "nvim-lualine/lualine.nvim" },
+  { "akinsho/bufferline.nvim", dependencies = "nvim-tree/nvim-web-devicons" },
+  { "nvim-tree/nvim-tree.lua", dependencies = "nvim-tree/nvim-web-devicons" },
+  { "nvim-telescope/telescope.nvim" },
+  { "nvim-telescope/telescope-file-browser.nvim" },
+
+  -- Colorschemes (pick your favorite below)
+  { "rebelot/kanagawa.nvim" },
+  { "sainnhe/sonokai" },
+  { "projekt0n/github-nvim-theme" },
+
+  -- LSP + Completion
+  { "neovim/nvim-lspconfig" },
+  { "hrsh7th/nvim-cmp" },
+  { "hrsh7th/cmp-nvim-lsp" },
+  { "hrsh7th/cmp-buffer" },
+  { "hrsh7th/cmp-path" },
+  { "hrsh7th/cmp-cmdline" },
+  { "saadparwaiz1/cmp_luasnip" },
+  { "L3MON4D3/LuaSnip" },
+
+  -- Utilities
+  { "tpope/vim-fugitive" },
+  { "tpope/vim-commentary" },
+  { "kylechui/nvim-surround", event = "VeryLazy" },
+  { "numToStr/Comment.nvim", config = true },
+  { "ggandor/leap.nvim", config = true },
+  { "dhananjaylatkar/cscope_maps.nvim" },
+  { "stevearc/vim-arduino" },
+  { "github/copilot.vim" },
+
+  -- ChatGPT integration
+  {
+    "robitx/gp.nvim",
+    config = function()
+      require("gp").setup({
+        openai_api_key = os.getenv("OPENAI_API_TOKEN"),
+        providers = {
+          openai = {
+            disable = false,
+            endpoint = "https://api.openai.com/v1/chat/completions",
+            secret = os.getenv("OPENAI_API_KEY"),
+          },
+        },
+      })
+    end,
+  },
+})
+
+-- General Settings
+vim.g.mapleader = ","
 vim.o.termguicolors = true
-vim.cmd('colorscheme sonokai') -- Set colorscheme to Sonokai
-vim.g.airline_theme = 'minimalist'
-vim.g.go_bin_path = vim.env.HOME .. "/.local/bin"
-vim.g.go_doc_popup_window = 1
-vim.g.go_auto_import = 1
-vim.g.go_imports_autosave = 1
-vim.g.python3_host_prog = '/usr/bin/python3'
-
--- Switch buffer tabs
-vim.api.nvim_set_keymap('n', '<C-M>', ':bnext<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<C-N>', ':bprev<CR>', { noremap = true, silent = true })
-
--- Menus
-vim.o.display = 'lastline'
-vim.o.wildmenu = true
-vim.o.wildmode = 'list:full'
-vim.o.wildignorecase = true
-vim.o.nu = true
+vim.cmd("colorscheme sonokai")
+vim.o.completeopt = "menuone,noselect"
+vim.o.number = true
 vim.o.wrap = false
 vim.o.expandtab = true
 vim.o.tabstop = 4
@@ -158,7 +82,94 @@ vim.o.cursorline = false
 vim.o.ignorecase = true
 vim.o.smartcase = true
 vim.o.incsearch = true
-vim.o.shell = '/bin/zsh'
+vim.o.mouse = "a"
+vim.o.swapfile = false
+vim.o.encoding = "utf-8"
+vim.o.shell = "/bin/zsh"
+vim.o.belloff = "all"
+vim.o.fileformat = "unix"
+vim.o.listchars = "trail:·,tab:▸\\ ,eol:¬"
+
+-- Treesitter
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "c", "cpp", "lua", "bash", "python", "go" },
+  highlight = { enable = true },
+  indent = { enable = true },
+})
+
+-- LSP Setup
+vim.lsp.enable('clangd')
+vim.lsp.enable('gopls')
+vim.lsp.enable('pyright')
+
+-- Completion
+local cmp = require("cmp")
+cmp.setup({
+  mapping = {
+    ["<Tab>"] = function(fallback)
+      local copilot_keys = vim.fn["copilot#Accept"]()
+      if copilot_keys ~= "" then
+        vim.api.nvim_feedkeys(copilot_keys, "i", true)
+      elseif cmp.visible() then
+        cmp.select_next_item()
+      else
+        fallback()
+      end
+    end,
+    ["<S-Tab>"] = cmp.mapping.select_prev_item(),
+    ["<CR>"] = cmp.mapping.confirm({ select = true }),
+  },
+  snippet = {
+    expand = function(args)
+      require("luasnip").lsp_expand(args.body)
+    end,
+  },
+  sources = {
+    { name = "nvim_lsp" },
+    { name = "luasnip" },
+  },
+})
+
+-- Telescope Setup
+require("telescope").setup({
+  extensions = {
+    file_browser = {
+      grouped = true,
+      hidden = true,
+      respect_gitignore = false,
+    },
+  },
+})
+require("telescope").load_extension("file_browser")
+vim.keymap.set("n", "<C-p>", function()
+  require("telescope").extensions.file_browser.file_browser({
+    path = vim.fn.expand("%:p:h"),
+    cwd = vim.fn.expand("%:p:h"),
+    prompt_title = "File Browser",
+  })
+end, { noremap = true, silent = true })
+
+-- Bufferline + Lualine
+require("bufferline").setup({})
+require("lualine").setup({
+  options = {
+    theme = "auto",
+    section_separators = "",
+    component_separators = "",
+  },
+})
+
+-- NvimTree
+require("nvim-tree").setup({})
+vim.keymap.set("n", "<F2>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+
+-- Keymaps
+vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.format() end, { noremap = true, silent = true })
+vim.keymap.set("n", "<C-M>", ":bnext<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<C-N>", ":bprev<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>l", ":set list!<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>ec", ":e $MYVIMRC<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
 
 -- Autocommands
 vim.cmd([[
@@ -166,111 +177,12 @@ vim.cmd([[
   autocmd BufWritePre *.html :normal gg=G
 ]])
 
-vim.o.encoding = 'utf-8'
-vim.o.errorbells = false
-vim.o.visualbell = false
-vim.o.cursorcolumn = false
-vim.o.autoindent = true
-vim.o.autochdir = true
-vim.o.swapfile = false
-vim.o.mouse = 'a'
-vim.o.fileformat = 'unix'
-
--- Leader key
-vim.g.mapleader = ','
-
--- Toggle NERDTree and TagBar
-vim.api.nvim_set_keymap('n', '<F2>', ':NERDTreeToggle<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<F3>', ':TagbarToggle<CR>', { noremap = true, silent = true })
-
--- Bubble single and multiple lines
-vim.api.nvim_set_keymap('n', '<C-Up>', 'ddkP', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<C-Down>', 'ddp', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('v', '<C-Up>', 'xkP`[V`]', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('v', '<C-Down>', 'xp`[V`]', { noremap = true, silent = true })
-
--- Formatting
-vim.api.nvim_set_keymap('n', '<leader>q', 'gqip', { noremap = true, silent = true })
-
--- Visualize tabs and newlines
-vim.o.listchars = 'trail:·,tab:▸\\,eol:¬'
-vim.api.nvim_set_keymap('n', '<leader>l', ':set list!<CR>', { noremap = true, silent = true }) -- Toggle tabs and EOL
-vim.api.nvim_set_keymap('n', '<leader>ec', ':e $MYVIMRC<CR>', { noremap = true, silent = true })
-
-vim.o.belloff = 'all'
-
--- Build quickfix list
-vim.cmd([[
-  function! BuildQuickfixList(lines)
-    call setqflist(map(copy(a:lines), '{ "filename": v:val }'))
-    copen
-    cc
-  endfunction
-]])
-
--- Session settings
-vim.g.session_autoload = 'no'
-vim.g.session_autosave = 'yes'
-
--- Telescope Setup
-local actions = require("telescope.actions")
-local action_state = require("telescope.actions.state")
-local builtin = require("telescope.builtin")
-local telescope = require("telescope")
-
-require("telescope").setup({
-  extensions = {
-    file_browser = {
-      use_git_status = false,   -- don’t show git symbols
-      dir_icon   = "[DIR]",         -- this is for folders
-      file_icon  = "●",         -- this is for files
-      dir_icon_hl  = "Directory",      -- blue by default
-      file_icon_hl = "TelescopeBorder",-- any highlight you like
-      grouped = true,
-      hidden  = true,
-    },
-  },
-})
-require("telescope").load_extension("file_browser")
-
-vim.keymap.set("n", "<C-p>", function()
-  require("telescope").extensions.file_browser.file_browser({
-    path = vim.fn.expand("%:p:h"),      -- current file’s dir
-    cwd  = vim.fn.expand("%:p:h"),
-    prompt_title = "File Browser",
-    grouped = true,
-    hidden = true,
-    respect_gitignore = false,
-  })
-end, { noremap=true, silent=true })
-
--- Enable filetype plugins and indent
-vim.cmd('filetype plugin indent on')
-vim.cmd('filetype on')
-
--- Initialize Lightspeed
-require'lightspeed'.setup {}
-
--- Remap 's' key to Lightspeed functionality
-vim.api.nvim_set_keymap('n', 's', '<Plug>Lightspeed_s', {})
-vim.api.nvim_set_keymap('n', 'S', '<Plug>Lightspeed_S', {})
-vim.api.nvim_set_keymap('x', 's', '<Plug>Lightspeed_s', {})
-vim.api.nvim_set_keymap('x', 'S', '<Plug>Lightspeed_S', {})
-vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
-vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
-
-vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
-
-
-------------------------------------------------------------
--- 🧹 SAFE suppression of lspconfig deprecation notice
-------------------------------------------------------------
+-- Silence deprecated lspconfig messages
 vim.defer_fn(function()
-  local original_notify = vim.notify
+  local orig = vim.notify
   vim.notify = function(msg, level, opts)
-    if msg:match("require%(\'lspconfig\'%)") then
-      return
-    end
-    original_notify(msg, level, opts)
+    if msg:match("require%(\'lspconfig\'%)") then return end
+    orig(msg, level, opts)
   end
 end, 200)
+
