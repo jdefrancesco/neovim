@@ -49,7 +49,7 @@ require('packer').startup(function(use)
   use 'hrsh7th/cmp-cmdline' -- Cmdline completions
   use 'saadparwaiz1/cmp_luasnip' -- Snippet completions
   use 'L3MON4D3/LuaSnip' -- Snippet engine
-  --
+  use { 'nvim-treesitter/nvim-treesitter' , run=':TSUpdate' }
   -- ChatGPT Gp.nvim Plugin
   use({ "robitx/gp.nvim",
     config = function()
@@ -76,12 +76,19 @@ end)
 -- Set NERDTree settings
 vim.g.NERDTreeChDirMode = 2
 
-local lspconfig = require('lspconfig')
-lspconfig.clangd.setup({})
-lspconfig.gopls.setup({})
-lspconfig.pyright.setup({})
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "c", "cpp", "lua", "bash", "python" },
+  highlight = { enable = true },
+  indent = { enable = true },
+})
 
-local cmp = require'cmp'
+
+vim.lsp.enable('clangd')
+vim.lsp.enable('gopls')
+vim.lsp.enable('pyright')
+
+
+local cmp = require ("cmp")
 cmp.setup({
     kmapping = {
       ['<Tab>'] = function(fallback)
@@ -253,3 +260,17 @@ vim.api.nvim_set_keymap('o', 's', '<Plug>Lightspeed_s', {})
 vim.api.nvim_set_keymap('o', 'S', '<Plug>Lightspeed_S', {})
 
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
+
+
+------------------------------------------------------------
+-- 🧹 SAFE suppression of lspconfig deprecation notice
+------------------------------------------------------------
+vim.defer_fn(function()
+  local original_notify = vim.notify
+  vim.notify = function(msg, level, opts)
+    if msg:match("require%(\'lspconfig\'%)") then
+      return
+    end
+    original_notify(msg, level, opts)
+  end
+end, 200)
