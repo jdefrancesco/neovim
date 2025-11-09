@@ -1,6 +1,8 @@
--- Updated: 2025-10
+-- Updated: 2025-11 — Copilot + Leap + LSP Modernized
 
+--------------------------------------------------------
 -- Lazy.nvim Bootstrap
+--------------------------------------------------------
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
@@ -11,9 +13,11 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+--------------------------------------------------------
 -- Plugin Specification
+--------------------------------------------------------
 require("lazy").setup({
-  -- Core Dependencies
+  -- Core
   { "nvim-lua/plenary.nvim" },
   { "nvim-treesitter/nvim-treesitter", build = ":TSUpdateSync" },
   { "nvim-lualine/lualine.nvim" },
@@ -22,7 +26,7 @@ require("lazy").setup({
   { "nvim-telescope/telescope.nvim" },
   { "nvim-telescope/telescope-file-browser.nvim" },
 
-  -- Colorschemes (pick your favorite below)
+  -- Colorschemes
   { "rebelot/kanagawa.nvim" },
   { "sainnhe/sonokai" },
   { "projekt0n/github-nvim-theme" },
@@ -37,21 +41,46 @@ require("lazy").setup({
   { "saadparwaiz1/cmp_luasnip" },
   { "L3MON4D3/LuaSnip" },
 
+  -- Copilot (Lua-native + cmp integration)
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = function()
+      require("copilot").setup({
+        panel = { enabled = true, auto_refresh = true },
+        suggestion = { enabled = false, auto_trigger = true, debounce = 75 },
+        filetypes = { ["*"] = true },
+        copilot_node_command = "node",
+      })
+    end,
+  },
+  {
+    "zbirenbaum/copilot-cmp",
+    after = { "copilot.lua", "nvim-cmp" },
+    config = function()
+      require("copilot_cmp").setup()
+    end,
+  },
+
   -- Utilities
   { "tpope/vim-fugitive" },
   { "tpope/vim-commentary" },
   { "kylechui/nvim-surround", event = "VeryLazy" },
   { "numToStr/Comment.nvim", config = true },
-  {
-        'ggandor/leap.nvim',
-        config = function()
-            require('leap').add_default_mappings()
-        end
 
+  {
+    "ggandor/leap.nvim",
+     config = function()
+        local leap = require("leap")
+        leap.setup({})
+        vim.keymap.set({ "n", "x", "o" }, "s", "<Plug>(leap-forward)")
+        vim.keymap.set({ "n", "x", "o" }, "S", "<Plug>(leap-backward)")
+        vim.keymap.set({ "n", "x", "o" }, "gs", "<Plug>(leap-from-window)")
+    end,
   },
   { "dhananjaylatkar/cscope_maps.nvim" },
   { "stevearc/vim-arduino" },
-  { "github/copilot.vim" },
 
   -- ChatGPT integration
   {
@@ -71,7 +100,9 @@ require("lazy").setup({
   },
 })
 
+--------------------------------------------------------
 -- General Settings
+--------------------------------------------------------
 vim.g.mapleader = ","
 vim.o.termguicolors = true
 vim.cmd("colorscheme sonokai")
@@ -96,32 +127,36 @@ vim.o.belloff = "all"
 vim.o.fileformat = "unix"
 vim.o.listchars = "trail:·,tab:▸\\ ,eol:¬"
 
+--------------------------------------------------------
 -- Treesitter
+--------------------------------------------------------
 require("nvim-treesitter.configs").setup({
   ensure_installed = { "c", "cpp", "lua", "bash", "python", "go" },
   highlight = { enable = true },
   indent = { enable = true },
 })
 
--- LSP Setup
-vim.lsp.enable('clangd')
-vim.lsp.enable('gopls')
-vim.lsp.enable('pyright')
+--------------------------------------------------------
+-- LSP Setup (future-proofed)
+--------------------------------------------------------
+if vim.lsp and vim.lsp.config then
+  vim.lsp.config("clangd", {})
+  vim.lsp.config("gopls", {})
+  vim.lsp.config("pyright", {})
+else
+  local lspconfig = require("lspconfig")
+  lspconfig.clangd.setup({})
+  lspconfig.gopls.setup({})
+  lspconfig.pyright.setup({})
+end
 
--- Completion
+--------------------------------------------------------
+-- nvim-cmp Setup (with Copilot)
+--------------------------------------------------------
 local cmp = require("cmp")
 cmp.setup({
   mapping = {
-    ["<Tab>"] = function(fallback)
-      local copilot_keys = vim.fn["copilot#Accept"]()
-      if copilot_keys ~= "" then
-        vim.api.nvim_feedkeys(copilot_keys, "i", true)
-      elseif cmp.visible() then
-        cmp.select_next_item()
-      else
-        fallback()
-      end
-    end,
+    ["<Tab>"] = cmp.mapping.select_next_item(),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }),
   },
@@ -130,13 +165,18 @@ cmp.setup({
       require("luasnip").lsp_expand(args.body)
     end,
   },
-  sources = {
+  sources = cmp.config.sources({
+    { name = "copilot" },
     { name = "nvim_lsp" },
     { name = "luasnip" },
-  },
+    { name = "buffer" },
+    { name = "path" },
+  }),
 })
 
--- Telescope Setup
+--------------------------------------------------------
+-- Telescope
+--------------------------------------------------------
 require("telescope").setup({
   extensions = {
     file_browser = {
@@ -147,6 +187,7 @@ require("telescope").setup({
   },
 })
 require("telescope").load_extension("file_browser")
+
 vim.keymap.set("n", "<C-p>", function()
   require("telescope").extensions.file_browser.file_browser({
     path = vim.fn.expand("%:p:h"),
@@ -155,7 +196,9 @@ vim.keymap.set("n", "<C-p>", function()
   })
 end, { noremap = true, silent = true })
 
--- Bufferline + Lualine
+--------------------------------------------------------
+-- UI (Bufferline + Lualine + NvimTree)
+--------------------------------------------------------
 require("bufferline").setup({})
 require("lualine").setup({
   options = {
@@ -165,21 +208,24 @@ require("lualine").setup({
   },
 })
 
--- NvimTree
 require("nvim-tree").setup({})
 vim.keymap.set("n", "<F2>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
 
+--------------------------------------------------------
 -- Keymaps
+--------------------------------------------------------
 vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.format() end, { noremap = true, silent = true })
 vim.keymap.set("n", "<C-M>", ":bnext<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<C-N>", ":bprev<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>l", ":set list!<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>ec", ":e $MYVIMRC<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>cp", ":Copilot panel<CR>", { noremap = true, silent = true, desc = "Copilot Panel" })
 
+--------------------------------------------------------
 -- Autocommands
+--------------------------------------------------------
 vim.cmd([[
   autocmd BufWritePre * %s/\s\+$//e
   autocmd BufWritePre *.html :normal gg=G
 ]])
-
