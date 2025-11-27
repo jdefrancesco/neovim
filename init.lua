@@ -1,4 +1,4 @@
--- Updated: 2025-11 — Copilot + Leap + LSP Modernized
+-- Updated: 2026-11 — Copilot + Leap + LSP Modernized
 
 --------------------------------------------------------
 -- Lazy.nvim Bootstrap
@@ -82,6 +82,34 @@ require("lazy").setup({
   { "dhananjaylatkar/cscope_maps.nvim" },
   { "stevearc/vim-arduino" },
 
+  --------------------------------------------------------------------
+  -- Aerial.nvim (Modern Tagbar — LSP/TS Symbols Sidebar)
+  --------------------------------------------------------------------
+  {
+    "stevearc/aerial.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("aerial").setup({
+        backends = { "lsp", "treesitter", "markdown", "man" },
+        layout = {
+          max_width = { 40, 0.25 },
+          min_width = 20,
+          default_direction = "right",
+          placement = "edge",
+        },
+        show_guides = true,
+        filter_kind = false, -- show all symbols
+      })
+
+      -- Keybinding: Toggle symbol sidebar
+      vim.keymap.set(
+        "n",
+        "<F3>",
+        "<cmd>AerialToggle!<CR>",
+        { noremap = true, silent = true, desc = "Toggle Symbols Sidebar (Aerial)" }
+      )
+    end,
+  },
   -- ChatGPT integration
   {
     "robitx/gp.nvim",
@@ -211,9 +239,7 @@ require("lualine").setup({
 require("nvim-tree").setup({})
 vim.keymap.set("n", "<F2>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
 
---------------------------------------------------------
 -- Keymaps
---------------------------------------------------------
 vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.format() end, { noremap = true, silent = true })
 vim.keymap.set("n", "<C-M>", ":bnext<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<C-N>", ":bprev<CR>", { noremap = true, silent = true })
@@ -221,10 +247,8 @@ vim.keymap.set("n", "<leader>l", ":set list!<CR>", { noremap = true, silent = tr
 vim.keymap.set("n", "<leader>ec", ":e $MYVIMRC<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>cp", ":Copilot panel<CR>", { noremap = true, silent = true, desc = "Copilot Panel" })
-
---------------------------------------------------------
+vim.keymap.set({"n", "i", "v"}, "<F1>", "<nop>", { silent = true })
 -- Autocommands
---------------------------------------------------------
 vim.cmd([[
   autocmd BufWritePre * %s/\s\+$//e
   autocmd BufWritePre *.html :normal gg=G
