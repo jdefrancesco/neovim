@@ -70,7 +70,7 @@ require("lazy").setup({
   { "numToStr/Comment.nvim", config = true },
 
   {
-    "ggandor/leap.nvim",
+     url = "https://codeberg.org/andyg/leap.nvim"
      config = function()
         local leap = require("leap")
         leap.setup({})
