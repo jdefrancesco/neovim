@@ -13,9 +13,38 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+vim.g.leap_suppress_repo_warning = true
 --------------------------------------------------------
 -- Plugin Specification
 --------------------------------------------------------
+-- Suppress Leap's repo-moved warning (works even if plugin ignores g: vars)
+do
+  local orig_notify = vim.notify
+  vim.notify = function(msg, level, opts)
+    msg = tostring(msg)
+    if msg:match("leap%.nvim") and (msg:match("Codeberg") or msg:match("codeberg") or msg:match("moved")) then
+      return
+    end
+    return orig_notify(msg, level, opts)
+  end
+
+  -- Some plugins use vim.api.nvim_echo instead of vim.notify
+  local orig_echo = vim.api.nvim_echo
+  vim.api.nvim_echo = function(chunks, history, opts)
+    local joined = ""
+    if type(chunks) == "table" then
+      for _, c in ipairs(chunks) do
+        joined = joined .. tostring(c[1])
+      end
+    else
+      joined = tostring(chunks)
+    end
+    if joined:match("leap%.nvim") and (joined:match("Codeberg") or joined:match("codeberg") or joined:match("moved")) then
+      return
+    end
+    return orig_echo(chunks, history, opts)
+  end
+end
 require("lazy").setup({
   -- Core
   { "nvim-lua/plenary.nvim" },
@@ -127,7 +156,6 @@ require("lazy").setup({
     end,
   },
 })
-
 --------------------------------------------------------
 -- General Settings
 --------------------------------------------------------
