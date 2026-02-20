@@ -1,4 +1,4 @@
--- Updated: 2026-11 —  + Leap + LSP Modernized
+-- Updated: 2026-11 — Copilot + Leap + LSP Modernized
 
 --------------------------------------------------------
 -- Lazy.nvim Bootstrap
@@ -70,7 +70,7 @@ require("lazy").setup({
   { "numToStr/Comment.nvim", config = true },
 
   {
-     url = "https://codeberg.org/andyg/leap.nvim"
+    "ggandor/leap.nvim",
      config = function()
         local leap = require("leap")
         leap.setup({})
