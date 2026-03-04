@@ -69,28 +69,28 @@ require("lazy").setup({
   { "hrsh7th/cmp-cmdline" },
   { "saadparwaiz1/cmp_luasnip" },
   { "L3MON4D3/LuaSnip" },
-
-  -- Copilot (Lua-native + cmp integration)
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = function()
-      require("copilot").setup({
-        panel = { enabled = true, auto_refresh = true },
-        suggestion = { enabled = false, auto_trigger = true, debounce = 75 },
-        filetypes = { ["*"] = true },
-        copilot_node_command = "node",
-      })
-    end,
-  },
-  {
-    "zbirenbaum/copilot-cmp",
-    after = { "copilot.lua", "nvim-cmp" },
-    config = function()
-      require("copilot_cmp").setup()
-    end,
-  },
+  --
+  -- -- Copilot (Lua-native + cmp integration)
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = function()
+  --     require("copilot").setup({
+  --       panel = { enabled = true, auto_refresh = true },
+  --       suggestion = { enabled = false, auto_trigger = true, debounce = 75 },
+  --       filetypes = { ["*"] = true },
+  --       copilot_node_command = "node",
+  --     })
+  --   end,
+  -- },
+  -- {
+  --   "zbirenbaum/copilot-cmp",
+  --   after = { "copilot.lua", "nvim-cmp" },
+  --   config = function()
+  --     require("copilot_cmp").setup()
+  --   end,
+  -- },
 
   -- Utilities
   { "tpope/vim-fugitive" },
@@ -154,6 +154,22 @@ require("lazy").setup({
         },
       })
     end,
+  },
+
+  -- AI Coding (Copilot-first by default)
+  {
+    "olimorris/codecompanion.nvim",
+    version = "^19.0.0",
+    cmd = { "CodeCompanion", "CodeCompanionChat", "CodeCompanionCmd", "CodeCompanionActions" },
+    keys = {
+      { "<leader>ca", "<cmd>CodeCompanionActions<CR>", desc = "CodeCompanion Actions", mode = { "n", "v" } },
+      { "<leader>ch", "<cmd>CodeCompanionChat Toggle<CR>", desc = "CodeCompanion Chat Toggle", mode = { "n", "v" } },
+    },
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    opts = {},
   },
 })
 --------------------------------------------------------
