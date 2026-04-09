@@ -1,5 +1,5 @@
--- init.lua — CodeCompanion + Codex (OpenAI Responses)
--- Updated: 2026-03-05
+-- init.lua — CodeCompanion + Codex
+-- Updated: 2026-4-7
 
 --------------------------------------------------------
 -- Lazy.nvim Bootstrap
@@ -65,7 +65,7 @@ require("lazy").setup({
 
   -- LSP + Completion
   { "neovim/nvim-lspconfig" },
-  { "hrsh7th/nvim-cmp" },
+  { "hrsh7th/nvim-cmp", commit = "b356f2c"},
   { "hrsh7th/cmp-nvim-lsp" },
   { "hrsh7th/cmp-buffer" },
   { "hrsh7th/cmp-path" },
@@ -238,9 +238,6 @@ require("lazy").setup({
   },
 })
 
---------------------------------------------------------
--- General Settings
---------------------------------------------------------
 vim.g.mapleader = ","
 vim.o.termguicolors = true
 vim.cmd("colorscheme sonokai")
@@ -360,9 +357,6 @@ vim.keymap.set("n", "<leader>ec", ":e $MYVIMRC<CR>", { noremap = true, silent = 
 vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
 vim.keymap.set({ "n", "i", "v" }, "<F1>", "<nop>", { silent = true })
 
---------------------------------------------------------
--- Autocommands
---------------------------------------------------------
 vim.cmd([[
   autocmd BufWritePre * %s/\s\+$//e
   autocmd BufWritePre *.html :normal gg=G
