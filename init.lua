@@ -2,10 +2,19 @@
 -- Updated: 2026-4-7
 
 --------------------------------------------------------
+-- Optional Providers
+--------------------------------------------------------
+vim.g.loaded_node_provider = 0
+vim.g.loaded_python3_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0
+
+--------------------------------------------------------
 -- Lazy.nvim Bootstrap
 --------------------------------------------------------
+local uv = vim.uv or vim.loop
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not uv.fs_stat(lazypath) then
   vim.fn.system({
     "git", "clone", "--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git",
@@ -65,13 +74,13 @@ require("lazy").setup({
 
   -- LSP + Completion
   { "neovim/nvim-lspconfig" },
-  { "hrsh7th/nvim-cmp", commit = "b356f2c"},
+  { "hrsh7th/nvim-cmp" },
   { "hrsh7th/cmp-nvim-lsp" },
   { "hrsh7th/cmp-buffer" },
   { "hrsh7th/cmp-path" },
   { "hrsh7th/cmp-cmdline" },
   { "saadparwaiz1/cmp_luasnip" },
-  { "L3MON4D3/LuaSnip" },
+  { "L3MON4D3/LuaSnip", version = "v2.*", build = "make install_jsregexp" },
 
   -- Utilities
   { "tpope/vim-fugitive" },
@@ -235,6 +244,10 @@ require("lazy").setup({
         },
       })
     end,
+  },
+}, {
+  rocks = {
+    enabled = false,
   },
 })
 
