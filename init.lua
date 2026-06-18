@@ -122,129 +122,8 @@ require("lazy").setup({
     end,
   },
 
-  --------------------------------------------------------
-  -- CodeCompanion (Codex via OpenAI Responses)
-  --------------------------------------------------------
-  {
-    "olimorris/codecompanion.nvim",
-    version = "^19.0.0",
-    cmd = { "CodeCompanion", "CodeCompanionChat", "CodeCompanionCmd", "CodeCompanionActions" },
-    keys = {
-      { "<leader>ca", "<cmd>CodeCompanionActions<CR>", desc = "CodeCompanion Actions", mode = { "n", "v" } },
-      { "<leader>ch", "<cmd>CodeCompanionChat Toggle<CR>", desc = "CodeCompanion Chat Toggle", mode = { "n", "v" } },
-      { "<leader>ci", "<cmd>CodeCompanion inline<CR>", desc = "CodeCompanion Inline", mode = { "n", "v" } },
-    },
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-treesitter/nvim-treesitter",
-    },
-    config = function()
-      local adapters = require("codecompanion.adapters")
+  { "coder/claudecode.nvim", dependencies = { "folke/snacks.nvim" }, config = true, },
 
-      require("codecompanion").setup({
-        -- Use interactions mapping to assign adapters for each mode
-        interactions = {
-          chat   = { adapter = "openai_responses_codex" },
-          cmd    = { adapter = "openai_responses_codex" },
-          inline = { adapter = "openai_responses_codex_inline" },
-        },
-
-        -- Define custom adapters using openai_responses to call Codex models
-        adapters = {
-          http = {
-            -- Streaming chat/cmd adapter for Codex
-            openai_responses_codex = function()
-              return adapters.extend("openai_responses", {
-                env = { api_key = "OPENAI_API_KEY" },
-                opts = { stream = true },
-                schema = {
-                  model = {
-                    default = "gpt-5.3-codex",
-                    -- Provide fallback choices for codex models
-                    choices = function(_, _)
-                      return {
-                        ["gpt-5.3-codex"] = {
-                          formatted_name = "GPT-5.3 Codex",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true },
-                        },
-                        ["gpt-5-codex"] = {
-                          formatted_name = "GPT-5 Codex",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true },
-                        },
-                        ["codex-mini-latest"] = {
-                          formatted_name = "Codex-mini",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true },
-                        },
-                      }
-                    end,
-                  },
-                  ["reasoning.effort"] = { default = "medium" },
-                  ["reasoning.summary"] = { default = "auto" },
-                  -- Remove unsupported sampling parameters
-                  top_p = { default = nil },
-                  temperature = { default = nil },
-                },
-                -- Remove unsupported parameters via request handler
-                handlers = {
-                  request = {
-                    build_parameters = function(_, params, messages)
-                      -- Explicitly drop unsupported sampling parameters
-                      params.top_p = nil
-                      params.temperature = nil
-                      return params
-                    end,
-                  },
-                },
-              })
-            end,
-
-            -- Non-streaming inline adapter for Codex
-            openai_responses_codex_inline = function()
-              return adapters.extend("openai_responses", {
-                env = { api_key = "OPENAI_API_KEY" },
-                opts = { stream = false, tools = true, vision = true },
-                schema = {
-                  model = {
-                    default = "gpt-5.3-codex",
-                    choices = function(_, _)
-                      return {
-                        ["gpt-5.3-codex"] = {
-                          formatted_name = "GPT-5.3 Codex",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true, stream = false },
-                        },
-                        ["gpt-5-codex"] = {
-                          formatted_name = "GPT-5 Codex",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true, stream = false },
-                        },
-                        ["codex-mini-latest"] = {
-                          formatted_name = "Codex-mini",
-                          opts = { has_function_calling = true, has_vision = true, can_reason = true, stream = false },
-                        },
-                      }
-                    end,
-                  },
-                  ["reasoning.effort"] = { default = "medium" },
-                  ["reasoning.summary"] = { default = "auto" },
-                  -- Remove unsupported sampling parameters for inline
-                  top_p = { default = nil },
-                  temperature = { default = nil },
-                },
-                handlers = {
-                  request = {
-                    build_parameters = function(_, params, messages)
-                      params.top_p = nil
-                      params.temperature = nil
-                      return params
-                    end,
-                  },
-                },
-              })
-            end,
-          },
-        },
-      })
-    end,
-  },
 }, {
   rocks = {
     enabled = false,
@@ -273,7 +152,8 @@ vim.o.swapfile = false
 vim.o.encoding = "utf-8"
 vim.o.shell = "/bin/zsh"
 vim.o.belloff = "all"
-vim.o.fileformat = "unix"
+-- vim.o.fileformat = "unix"
+vim.opt.fileformats = { "unix", "dos", "mac" }
 vim.o.listchars = "trail:·,tab:▸\\ ,eol:¬"
 
 --------------------------------------------------------
@@ -374,3 +254,110 @@ vim.cmd([[
   autocmd BufWritePre * %s/\s\+$//e
   autocmd BufWritePre *.html :normal gg=G
 ]])
+
+
+
+
+--------------------------------------------------------
+-- Claude Code: Telescope-first command palette
+--------------------------------------------------------
+
+local function claude_picker()
+  local ok, _ = pcall(require, "telescope")
+  if not ok then
+    vim.notify("telescope.nvim is not installed", vim.log.levels.ERROR)
+    return
+  end
+
+  local pickers = require("telescope.pickers")
+  local finders = require("telescope.finders")
+  local conf = require("telescope.config").values
+  local actions = require("telescope.actions")
+  local action_state = require("telescope.actions.state")
+
+  local commands = {
+    { name = "Toggle Claude", cmd = "ClaudeCode", desc = "Open or close Claude pane" },
+    { name = "Focus Claude", cmd = "ClaudeCodeFocus", desc = "Move cursor to Claude pane" },
+    { name = "Resume conversation", cmd = "ClaudeCode --resume", desc = "Resume old session" },
+    { name = "Continue latest", cmd = "ClaudeCode --continue", desc = "Continue latest session" },
+    { name = "Select model", cmd = "ClaudeCodeSelectModel", desc = "Choose model" },
+    { name = "Add current buffer", cmd = "ClaudeCodeAdd %", desc = "Add current file as context" },
+    { name = "Send selection", cmd = "ClaudeCodeSend", desc = "Send visual selection" },
+    { name = "Status", cmd = "ClaudeCodeStatus", desc = "Show Claude status" },
+    { name = "Accept diff", cmd = "ClaudeCodeDiffAccept", desc = "Accept current diff" },
+    { name = "Reject diff", cmd = "ClaudeCodeDiffDeny", desc = "Reject current diff" },
+    { name = "Close diffs", cmd = "ClaudeCodeCloseAllDiffs", desc = "Close all diff windows" },
+    { name = "Open/create CLAUDE.md", cmd = "ClaudeOpenMemory", desc = "Project instructions" },
+  }
+
+  pickers
+    .new({}, {
+      prompt_title = "Claude Code",
+      finder = finders.new_table({
+        results = commands,
+        entry_maker = function(entry)
+          return {
+            value = entry,
+            display = entry.name .. " — " .. entry.desc,
+            ordinal = entry.name .. " " .. entry.desc .. " " .. entry.cmd,
+          }
+        end,
+      }),
+      sorter = conf.generic_sorter({}),
+      attach_mappings = function(prompt_bufnr)
+        actions.select_default:replace(function()
+          local selection = action_state.get_selected_entry()
+          actions.close(prompt_bufnr)
+
+          if not selection or not selection.value then
+            return
+          end
+
+          vim.cmd(selection.value.cmd)
+        end)
+
+        return true
+      end,
+    })
+    :find()
+end
+
+vim.api.nvim_create_user_command("ClaudeOpenMemory", function()
+  local root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+
+  if vim.v.shell_error ~= 0 or root == nil or root == "" then
+    root = vim.fn.getcwd()
+  end
+
+  local path = root .. "/CLAUDE.md"
+
+  if vim.fn.filereadable(path) == 0 then
+    vim.fn.writefile({
+      "# Project instructions",
+      "",
+      "- Prefer minimal, reviewable diffs.",
+      "- Do not rewrite unrelated code.",
+      "- Run tests before claiming a fix works.",
+      "- Explain security-sensitive changes.",
+      "- Ask before adding new dependencies.",
+      "",
+    }, path)
+  end
+
+  vim.cmd("edit " .. vim.fn.fnameescape(path))
+end, {})
+
+-- Primary interface: command palette
+vim.keymap.set("n", "<C-t>", claude_picker, {
+  desc = "Claude command palette",
+})
+
+-- Terminal fallback, because many terminals do not pass Cmd+p to Neovim
+vim.keymap.set("n", "<leader>ap", claude_picker, {
+  desc = "Claude command palette",
+})
+
+-- Keep this direct mapping because visual selections are modal/contextual
+vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<cr>", {
+  desc = "Claude send selection",
+})
