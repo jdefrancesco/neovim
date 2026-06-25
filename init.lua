@@ -1,5 +1,14 @@
--- init.lua — CodeCompanion + Codex
--- Updated: 2026-4-7
+-- init.lua — Cleaned Neovim config
+-- Updated: 2026-06-18
+--
+-- Notes:
+-- - Leader is set before lazy.nvim loads plugins.
+-- - Removed global vim.notify/vim_echo monkeypatch for Leap warnings.
+-- - Treesitter markdown highlighting is temporarily disabled to avoid the
+--   decoration-provider crash you saw in .md files.
+-- - <C-p> opens Telescope file browser.
+-- - Claude command palette is available at <leader>ap.
+-- - Leap has explicit labels and timeout settings.
 
 --------------------------------------------------------
 -- Optional Providers
@@ -10,49 +19,29 @@ vim.g.loaded_ruby_provider = 0
 vim.g.loaded_perl_provider = 0
 
 --------------------------------------------------------
+-- Leader keys
+--------------------------------------------------------
+vim.g.mapleader = ","
+vim.g.maplocalleader = ","
+
+--------------------------------------------------------
 -- Lazy.nvim Bootstrap
 --------------------------------------------------------
 local uv = vim.uv or vim.loop
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+
 if not uv.fs_stat(lazypath) then
   vim.fn.system({
-    "git", "clone", "--filter=blob:none",
+    "git",
+    "clone",
+    "--filter=blob:none",
     "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", lazypath,
+    "--branch=stable",
+    lazypath,
   })
 end
+
 vim.opt.rtp:prepend(lazypath)
-
---------------------------------------------------------
--- Leap repo-warning suppression
---------------------------------------------------------
-vim.g.leap_suppress_repo_warning = true
-do
-  local orig_notify = vim.notify
-  vim.notify = function(msg, level, opts)
-    msg = tostring(msg)
-    if msg:match("leap%.nvim") and (msg:match("Codeberg") or msg:match("codeberg") or msg:match("moved")) then
-      return
-    end
-    return orig_notify(msg, level, opts)
-  end
-
-  local orig_echo = vim.api.nvim_echo
-  vim.api.nvim_echo = function(chunks, history, opts)
-    local joined = ""
-    if type(chunks) == "table" then
-      for _, c in ipairs(chunks) do
-        joined = joined .. tostring(c[1])
-      end
-    else
-      joined = tostring(chunks)
-    end
-    if joined:match("leap%.nvim") and (joined:match("Codeberg") or joined:match("codeberg") or joined:match("moved")) then
-      return
-    end
-    return orig_echo(chunks, history, opts)
-  end
-end
 
 --------------------------------------------------------
 -- Plugins
@@ -64,7 +53,7 @@ require("lazy").setup({
   { "nvim-lualine/lualine.nvim" },
   { "akinsho/bufferline.nvim", dependencies = "nvim-tree/nvim-web-devicons" },
   { "nvim-tree/nvim-tree.lua", dependencies = "nvim-tree/nvim-web-devicons" },
-  { "nvim-telescope/telescope.nvim" },
+  { "nvim-telescope/telescope.nvim", dependencies = "nvim-lua/plenary.nvim" },
   { "nvim-telescope/telescope-file-browser.nvim" },
 
   -- Colorschemes
@@ -85,22 +74,37 @@ require("lazy").setup({
   -- Utilities
   { "tpope/vim-fugitive" },
   { "tpope/vim-commentary" },
-  { "kylechui/nvim-surround", event = "VeryLazy" },
+  { "kylechui/nvim-surround", event = "VeryLazy", config = true },
   { "numToStr/Comment.nvim", config = true },
-
-  {
-    "ggandor/leap.nvim",
-    config = function()
-      local leap = require("leap")
-      leap.setup({})
-      vim.keymap.set({ "n", "x", "o" }, "s", "<Plug>(leap-forward)")
-      vim.keymap.set({ "n", "x", "o" }, "S", "<Plug>(leap-backward)")
-      vim.keymap.set({ "n", "x", "o" }, "gs", "<Plug>(leap-from-window)")
-    end,
-  },
-
   { "dhananjaylatkar/cscope_maps.nvim" },
   { "stevearc/vim-arduino" },
+
+  -- Leap
+  { url = "https://codeberg.org/andyg/leap.nvim", name = "leap.nvim",
+    config = function()
+      local leap = require("leap")
+
+      leap.setup({
+        labels = {
+          "s", "f", "n", "j", "k", "l", "h", "o",
+          "d", "w", "e", "m", "b", "u", "y", "v",
+          "r", "g", "t", "c", "x", "z",
+        },
+      })
+
+      vim.keymap.set({ "n", "x", "o" }, "s", "<Plug>(leap-forward)", {
+        desc = "Leap forward",
+      })
+
+      vim.keymap.set({ "n", "x", "o" }, "S", "<Plug>(leap-backward)", {
+        desc = "Leap backward",
+      })
+
+      vim.keymap.set({ "n", "x", "o" }, "gs", "<Plug>(leap-from-window)", {
+        desc = "Leap from window",
+      })
+    end,
+  },
 
   -- Aerial.nvim
   {
@@ -118,19 +122,47 @@ require("lazy").setup({
         show_guides = true,
         filter_kind = false,
       })
-      vim.keymap.set("n", "<F3>", "<cmd>AerialToggle!<CR>", { noremap = true, silent = true, desc = "Toggle Symbols Sidebar (Aerial)" })
+
+      vim.keymap.set("n", "<F3>", "<cmd>AerialToggle!<CR>", {
+        noremap = true,
+        silent = true,
+        desc = "Toggle Symbols Sidebar (Aerial)",
+      })
     end,
   },
 
-  { "coder/claudecode.nvim", dependencies = { "folke/snacks.nvim" }, config = true, },
-
+  -- Claude Code
+  {
+    "coder/claudecode.nvim",
+    dependencies = { "folke/snacks.nvim" },
+    opts = {
+      git_repo_cwd = true,
+      log_level = "info",
+      terminal = {
+        provider = "snacks",
+        split_side = "right",
+        split_width_percentage = 0.34,
+        auto_close = true,
+      },
+      diff_opts = {
+        layout = "vertical",
+        open_in_new_tab = false,
+        keep_terminal_focus = false,
+        auto_resize_terminal = true,
+      },
+      track_selection = true,
+      focus_after_send = false,
+    },
+  },
 }, {
   rocks = {
     enabled = false,
   },
 })
 
-vim.g.mapleader = ","
+--------------------------------------------------------
+-- General Options
+--------------------------------------------------------
 vim.o.termguicolors = true
 vim.cmd("colorscheme sonokai")
 
@@ -152,17 +184,45 @@ vim.o.swapfile = false
 vim.o.encoding = "utf-8"
 vim.o.shell = "/bin/zsh"
 vim.o.belloff = "all"
--- vim.o.fileformat = "unix"
 vim.opt.fileformats = { "unix", "dos", "mac" }
 vim.o.listchars = "trail:·,tab:▸\\ ,eol:¬"
+
+-- Multi-key mappings and Leap label selection.
+vim.o.timeout = true
+vim.o.timeoutlen = 500
+vim.o.ttimeout = true
+vim.o.ttimeoutlen = 50
 
 --------------------------------------------------------
 -- Treesitter
 --------------------------------------------------------
 require("nvim-treesitter.configs").setup({
-  ensure_installed = { "c", "cpp", "lua", "bash", "python", "go" },
-  highlight = { enable = true },
-  indent = { enable = true },
+  ensure_installed = {
+    "c",
+    "cpp",
+    "lua",
+    "bash",
+    "python",
+    "go",
+    "markdown",
+    "markdown_inline",
+  },
+
+  highlight = {
+    enable = true,
+
+    -- Workaround for the markdown decoration-provider crash:
+    --   attempt to call method 'range' (a nil value)
+    --
+    -- After running :Lazy sync and :TSUpdate markdown markdown_inline,
+    -- you can try removing this disable line.
+    disable = { "markdown" },
+  },
+
+  indent = {
+    enable = true,
+    disable = { "markdown" },
+  },
 })
 
 --------------------------------------------------------
@@ -180,20 +240,23 @@ else
 end
 
 --------------------------------------------------------
--- nvim-cmp Setup (no Copilot source)
+-- nvim-cmp Setup
 --------------------------------------------------------
 local cmp = require("cmp")
+
 cmp.setup({
   mapping = {
     ["<Tab>"] = cmp.mapping.select_next_item(),
     ["<S-Tab>"] = cmp.mapping.select_prev_item(),
     ["<CR>"] = cmp.mapping.confirm({ select = true }),
   },
+
   snippet = {
     expand = function(args)
       require("luasnip").lsp_expand(args.body)
     end,
   },
+
   sources = cmp.config.sources({
     { name = "nvim_lsp" },
     { name = "luasnip" },
@@ -214,20 +277,34 @@ require("telescope").setup({
     },
   },
 })
+
 require("telescope").load_extension("file_browser")
 
-vim.keymap.set("n", "<C-p>", function()
+local function telescope_file_browser()
   require("telescope").extensions.file_browser.file_browser({
     path = vim.fn.expand("%:p:h"),
     cwd = vim.fn.expand("%:p:h"),
     prompt_title = "File Browser",
   })
-end, { noremap = true, silent = true })
+end
+
+vim.keymap.set("n", "<C-p>", telescope_file_browser, {
+  noremap = true,
+  silent = true,
+  desc = "Telescope file browser",
+})
+
+vim.keymap.set("n", "<leader>fb", telescope_file_browser, {
+  noremap = true,
+  silent = true,
+  desc = "Telescope file browser",
+})
 
 --------------------------------------------------------
--- UI (Bufferline + Lualine + NvimTree)
+-- UI: Bufferline + Lualine + NvimTree
 --------------------------------------------------------
 require("bufferline").setup({})
+
 require("lualine").setup({
   options = {
     theme = "auto",
@@ -237,31 +314,81 @@ require("lualine").setup({
 })
 
 require("nvim-tree").setup({})
-vim.keymap.set("n", "<F2>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
+
+vim.keymap.set("n", "<F2>", "<cmd>NvimTreeToggle<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Toggle file tree",
+})
 
 --------------------------------------------------------
--- Keymaps
+-- General Keymaps
 --------------------------------------------------------
-vim.keymap.set("n", "<leader>r", function() vim.lsp.buf.format() end, { noremap = true, silent = true })
-vim.keymap.set("n", "<C-M>", ":bnext<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "<C-N>", ":bprev<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "<leader>l", ":set list!<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "<leader>ec", ":e $MYVIMRC<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, { noremap = true, silent = true })
-vim.keymap.set({ "n", "i", "v" }, "<F1>", "<nop>", { silent = true })
+vim.keymap.set("n", "<leader>r", function()
+  vim.lsp.buf.format()
+end, {
+  noremap = true,
+  silent = true,
+  desc = "Format buffer",
+})
 
-vim.cmd([[
-  autocmd BufWritePre * %s/\s\+$//e
-  autocmd BufWritePre *.html :normal gg=G
-]])
+vim.keymap.set("n", "<C-M>", "<cmd>bnext<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Next buffer",
+})
 
+vim.keymap.set("n", "<C-N>", "<cmd>bprev<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Previous buffer",
+})
 
+vim.keymap.set("n", "<leader>l", "<cmd>set list!<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Toggle invisible characters",
+})
 
+vim.keymap.set("n", "<leader>ec", "<cmd>e $MYVIMRC<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Edit init.lua",
+})
+
+vim.keymap.set("n", "<leader>d", vim.diagnostic.open_float, {
+  noremap = true,
+  silent = true,
+  desc = "Open diagnostic float",
+})
+
+vim.keymap.set({ "n", "i", "v" }, "<F1>", "<nop>", {
+  silent = true,
+  desc = "Disable F1 help",
+})
 
 --------------------------------------------------------
--- Claude Code: Telescope-first command palette
+-- Autocmds
 --------------------------------------------------------
+local autocmd_group = vim.api.nvim_create_augroup("UserConfig", {
+  clear = true,
+})
 
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = autocmd_group,
+  pattern = "*",
+  command = [[%s/\s\+$//e]],
+})
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = autocmd_group,
+  pattern = "*.html",
+  command = "normal! gg=G",
+})
+
+--------------------------------------------------------
+-- Claude Code: Telescope-first Command Palette
+--------------------------------------------------------
 local function claude_picker()
   local ok, _ = pcall(require, "telescope")
   if not ok then
@@ -298,7 +425,7 @@ local function claude_picker()
         entry_maker = function(entry)
           return {
             value = entry,
-            display = entry.name .. " — " .. entry.desc,
+            display = entry.name .. " - " .. entry.desc,
             ordinal = entry.name .. " " .. entry.desc .. " " .. entry.cmd,
           }
         end,
@@ -309,11 +436,9 @@ local function claude_picker()
           local selection = action_state.get_selected_entry()
           actions.close(prompt_bufnr)
 
-          if not selection or not selection.value then
-            return
+          if selection and selection.value and selection.value.cmd then
+            vim.cmd(selection.value.cmd)
           end
-
-          vim.cmd(selection.value.cmd)
         end)
 
         return true
@@ -347,17 +472,12 @@ vim.api.nvim_create_user_command("ClaudeOpenMemory", function()
   vim.cmd("edit " .. vim.fn.fnameescape(path))
 end, {})
 
--- Primary interface: command palette
-vim.keymap.set("n", "<C-t>", claude_picker, {
-  desc = "Claude command palette",
-})
-
--- Terminal fallback, because many terminals do not pass Cmd+p to Neovim
+-- Claude command palette.
 vim.keymap.set("n", "<leader>ap", claude_picker, {
   desc = "Claude command palette",
 })
 
--- Keep this direct mapping because visual selections are modal/contextual
-vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<cr>", {
+-- Keep direct visual mapping because selected text is contextual.
+vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<CR>", {
   desc = "Claude send selection",
 })
