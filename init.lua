@@ -1,9 +1,11 @@
 -- init.lua — Cleaned Neovim config
--- Updated: 2026-06-18
+-- Updated: 2026-06-25
 --
 -- Notes:
 -- - Leader is set before lazy.nvim loads plugins.
 -- - Removed global vim.notify/vim_echo monkeypatch for Leap warnings.
+-- - Treesitter setup now lives inside the lazy.nvim plugin spec, so Neovim
+--   will not crash if nvim-treesitter is missing or not loaded yet.
 -- - Treesitter markdown highlighting is temporarily disabled to avoid the
 --   decoration-provider crash you saw in .md files.
 -- - <C-p> opens Telescope file browser.
@@ -49,7 +51,52 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   -- Core
   { "nvim-lua/plenary.nvim" },
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdateSync" },
+
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdateSync",
+    config = function()
+      local ok, treesitter = pcall(require, "nvim-treesitter.configs")
+
+      if not ok then
+        vim.notify(
+          "nvim-treesitter.configs could not be loaded. Run :Lazy sync and restart Neovim.",
+          vim.log.levels.WARN
+        )
+        return
+      end
+
+      treesitter.setup({
+        ensure_installed = {
+          "c",
+          "cpp",
+          "lua",
+          "bash",
+          "python",
+          "go",
+          "markdown",
+          "markdown_inline",
+        },
+
+        highlight = {
+          enable = true,
+
+          -- Workaround for the markdown decoration-provider crash:
+          --   attempt to call method 'range' (a nil value)
+          --
+          -- After running :Lazy sync and :TSUpdate markdown markdown_inline,
+          -- you can try removing this disable line.
+          disable = { "markdown" },
+        },
+
+        indent = {
+          enable = true,
+          disable = { "markdown" },
+        },
+      })
+    end,
+  },
+
   { "nvim-lualine/lualine.nvim" },
   { "akinsho/bufferline.nvim", dependencies = "nvim-tree/nvim-web-devicons" },
   { "nvim-tree/nvim-tree.lua", dependencies = "nvim-tree/nvim-web-devicons" },
@@ -80,7 +127,9 @@ require("lazy").setup({
   { "stevearc/vim-arduino" },
 
   -- Leap
-  { url = "https://codeberg.org/andyg/leap.nvim", name = "leap.nvim",
+  {
+    url = "https://codeberg.org/andyg/leap.nvim",
+    name = "leap.nvim",
     config = function()
       local leap = require("leap")
 
@@ -192,38 +241,6 @@ vim.o.timeout = true
 vim.o.timeoutlen = 500
 vim.o.ttimeout = true
 vim.o.ttimeoutlen = 50
-
---------------------------------------------------------
--- Treesitter
---------------------------------------------------------
-require("nvim-treesitter.configs").setup({
-  ensure_installed = {
-    "c",
-    "cpp",
-    "lua",
-    "bash",
-    "python",
-    "go",
-    "markdown",
-    "markdown_inline",
-  },
-
-  highlight = {
-    enable = true,
-
-    -- Workaround for the markdown decoration-provider crash:
-    --   attempt to call method 'range' (a nil value)
-    --
-    -- After running :Lazy sync and :TSUpdate markdown markdown_inline,
-    -- you can try removing this disable line.
-    disable = { "markdown" },
-  },
-
-  indent = {
-    enable = true,
-    disable = { "markdown" },
-  },
-})
 
 --------------------------------------------------------
 -- LSP Setup
