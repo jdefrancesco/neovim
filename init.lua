@@ -1,11 +1,14 @@
 -- init.lua — Cleaned Neovim config
--- Updated: 2026-06-25
+-- Updated: 2026-06-30
 --
 -- Notes:
 -- - Leader is set before lazy.nvim loads plugins.
 -- - Removed global vim.notify/vim_echo monkeypatch for Leap warnings.
 -- - Treesitter setup now lives inside the lazy.nvim plugin spec, so Neovim
 --   will not crash if nvim-treesitter is missing or not loaded yet.
+-- - nvim-treesitter is pinned to the `master` branch. The default branch is
+--   now the rewritten `main`, which removes nvim-treesitter.configs and the
+--   :TSUpdateSync command. Pinning master keeps this config working.
 -- - Treesitter markdown highlighting is temporarily disabled to avoid the
 --   decoration-provider crash you saw in .md files.
 -- - <C-p> opens Telescope file browser.
@@ -54,7 +57,8 @@ require("lazy").setup({
 
   {
     "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdateSync",
+    branch = "master",
+    build = ":TSUpdate",
     config = function()
       local ok, treesitter = pcall(require, "nvim-treesitter.configs")
 
@@ -490,7 +494,7 @@ vim.api.nvim_create_user_command("ClaudeOpenMemory", function()
 end, {})
 
 -- Claude command palette.
-vim.keymap.set("n", "<leader>ap", claude_picker, {
+vim.keymap.set("n", "<C-t>", claude_picker, {
   desc = "Claude command palette",
 })
 
