@@ -52,42 +52,50 @@ require("lazy").setup({
   -- Core
   { "nvim-lua/plenary.nvim" },
 
-{
-  "nvim-treesitter/nvim-treesitter",
-  lazy = false,
-  build = ":TSUpdate",
-  config = function()
-    require("nvim-treesitter").setup({
-      install_dir = vim.fn.stdpath("data") .. "/site",
-    })
+  {
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdateSync",
+    config = function()
+      local ok, treesitter = pcall(require, "nvim-treesitter.configs")
 
-    require("nvim-treesitter").install({
-      "c",
-      "cpp",
-      "lua",
-      "bash",
-      "python",
-      "go",
-      "markdown",
-      "markdown_inline",
-    })
+      if not ok then
+        vim.notify(
+          "nvim-treesitter.configs could not be loaded. Run :Lazy sync and restart Neovim.",
+          vim.log.levels.WARN
+        )
+        return
+      end
 
-    vim.api.nvim_create_autocmd("FileType", {
-      pattern = {
-        "c",
-        "cpp",
-        "lua",
-        "sh",
-        "python",
-        "go",
-      },
-      callback = function()
-        vim.treesitter.start()
-      end,
-    })
-  end,
-},
+      treesitter.setup({
+        ensure_installed = {
+          "c",
+          "cpp",
+          "lua",
+          "bash",
+          "python",
+          "go",
+          "markdown",
+          "markdown_inline",
+        },
 
+        highlight = {
+          enable = true,
+
+          -- Workaround for the markdown decoration-provider crash:
+          --   attempt to call method 'range' (a nil value)
+          --
+          -- After running :Lazy sync and :TSUpdate markdown markdown_inline,
+          -- you can try removing this disable line.
+          disable = { "markdown" },
+        },
+
+        indent = {
+          enable = true,
+          disable = { "markdown" },
+        },
+      })
+    end,
+  },
 
   { "nvim-lualine/lualine.nvim" },
   { "akinsho/bufferline.nvim", dependencies = "nvim-tree/nvim-web-devicons" },
@@ -482,7 +490,7 @@ vim.api.nvim_create_user_command("ClaudeOpenMemory", function()
 end, {})
 
 -- Claude command palette.
-vim.keymap.set("n", "<C-l>", claude_picker, {
+vim.keymap.set("n", "<C-t>", claude_picker, {
   desc = "Claude command palette",
 })
 
