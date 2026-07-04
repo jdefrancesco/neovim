@@ -312,6 +312,15 @@ else
   })
 end
 
+vim.keymap.set("n", "<F5>", "<cmd>NvimTreeToggle<CR>", {
+  silent = true,
+  desc = "Toggle file tree",
+})
+
+vim.keymap.set("n", "<F6>", "<cmd>AerialToggle!<CR>", {
+  silent = true,
+  desc = "Toggle Symbols Sidebar (Aerial)",
+})
 --------------------------------------------------------
 -- nvim-cmp Setup
 --------------------------------------------------------
@@ -391,15 +400,6 @@ require("nvim-tree").setup({})
 local function nvim_tree_toggle()
   vim.cmd("NvimTreeToggle")
 end
-
-for _, lhs in ipairs({ "<F2>", "<Esc>OQ", "<Esc>[12~" }) do
-  vim.keymap.set("n", lhs, nvim_tree_toggle, {
-    noremap = true,
-    silent = true,
-    desc = "Toggle file tree",
-  })
-end
-
 --------------------------------------------------------
 -- General Keymaps
 --------------------------------------------------------
