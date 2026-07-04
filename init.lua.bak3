@@ -164,17 +164,11 @@ require("lazy").setup({
         filter_kind = false,
       })
 
-      local function aerial_toggle()
-        vim.cmd("AerialToggle!")
-      end
-
-      for _, lhs in ipairs({ "<F3>", "<Esc>OR", "<Esc>[13~" }) do
-        vim.keymap.set("n", lhs, aerial_toggle, {
-          noremap = true,
-          silent = true,
-          desc = "Toggle Symbols Sidebar (Aerial)",
-        })
-      end
+      vim.keymap.set("n", "<F3>", "<cmd>AerialToggle!<CR>", {
+        noremap = true,
+        silent = true,
+        desc = "Toggle Symbols Sidebar (Aerial)",
+      })
     end,
   },
 
@@ -238,78 +232,20 @@ vim.o.listchars = "trail:·,tab:▸\\ ,eol:¬"
 vim.o.timeout = true
 vim.o.timeoutlen = 500
 vim.o.ttimeout = true
--- Function keys are multi-byte terminal escape sequences. 50ms is a
--- little too aggressive over SSH/tmux/iTerm and can make F2/F3 decode
--- as raw escape bytes instead of <F2>/<F3>.
-vim.o.ttimeoutlen = 100
+vim.o.ttimeoutlen = 50
 
 --------------------------------------------------------
 -- LSP Setup
 --------------------------------------------------------
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-local ok_cmp_lsp, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-
-if ok_cmp_lsp then
-  capabilities = cmp_nvim_lsp.default_capabilities(capabilities)
-end
-
-local lsp_servers = { "clangd", "gopls", "pyright" }
-
--- Neovim 0.11+: vim.lsp.config() only defines/merges configs;
--- vim.lsp.enable() is the step that actually activates them.
-if vim.lsp and vim.lsp.config and vim.lsp.enable then
-  vim.lsp.config("*", {
-    capabilities = capabilities,
-  })
-
-  vim.lsp.config("clangd", {
-    root_markers = { ".clangd", "compile_commands.json", "compile_flags.txt", ".git" },
-  })
-
-  vim.lsp.config("gopls", {
-    root_markers = { "go.work", "go.mod", ".git" },
-  })
-
-  vim.lsp.config("pyright", {
-    root_markers = {
-      "pyrightconfig.json",
-      "pyproject.toml",
-      "setup.py",
-      "setup.cfg",
-      "requirements.txt",
-      "Pipfile",
-      ".git",
-    },
-  })
-
-  vim.lsp.enable(lsp_servers)
+if vim.lsp and vim.lsp.config then
+  vim.lsp.config("clangd", {})
+  vim.lsp.config("gopls", {})
+  vim.lsp.config("pyright", {})
 else
-  -- Neovim <= 0.10 fallback.
   local lspconfig = require("lspconfig")
-  local util = require("lspconfig.util")
-
-  lspconfig.clangd.setup({
-    capabilities = capabilities,
-    root_dir = util.root_pattern(".clangd", "compile_commands.json", "compile_flags.txt", ".git"),
-  })
-
-  lspconfig.gopls.setup({
-    capabilities = capabilities,
-    root_dir = util.root_pattern("go.work", "go.mod", ".git"),
-  })
-
-  lspconfig.pyright.setup({
-    capabilities = capabilities,
-    root_dir = util.root_pattern(
-      "pyrightconfig.json",
-      "pyproject.toml",
-      "setup.py",
-      "setup.cfg",
-      "requirements.txt",
-      "Pipfile",
-      ".git"
-    ),
-  })
+  lspconfig.clangd.setup({})
+  lspconfig.gopls.setup({})
+  lspconfig.pyright.setup({})
 end
 
 --------------------------------------------------------
@@ -388,17 +324,11 @@ require("lualine").setup({
 
 require("nvim-tree").setup({})
 
-local function nvim_tree_toggle()
-  vim.cmd("NvimTreeToggle")
-end
-
-for _, lhs in ipairs({ "<F2>", "<Esc>OQ", "<Esc>[12~" }) do
-  vim.keymap.set("n", lhs, nvim_tree_toggle, {
-    noremap = true,
-    silent = true,
-    desc = "Toggle file tree",
-  })
-end
+vim.keymap.set("n", "<F2>", "<cmd>NvimTreeToggle<CR>", {
+  noremap = true,
+  silent = true,
+  desc = "Toggle file tree",
+})
 
 --------------------------------------------------------
 -- General Keymaps
