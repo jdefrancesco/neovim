@@ -560,3 +560,10 @@ vim.keymap.set("n", "<C-l>", claude_picker, {
 vim.keymap.set("v", "<leader>as", "<cmd>ClaudeCodeSend<CR>", {
   desc = "Claude send selection",
 })
+
+-- Bubble line up or down
+vim.keymap.set("n", "<leader>k", ":m .-2<CR>==")
+vim.keymap.set("n", "<A-j>", ":m .+1<CR>==")
+-- Visual bubble line up or down
+vim.keymap.set("v", "<A-k>", ":m '<-2<CR>gv=gv")
+vim.keymap.set("v", "<A-j>", ":m '>+1<CR>gv=gv")
